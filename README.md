@@ -74,8 +74,6 @@ This is helpful if your bot is in several servers and you need to let everyone k
 - RandomAnnouncementThumbnail - set to true if you want it to use random images from my custom thumbnails.  Does not work if you have a custom image you're using.
 - RandomAnnouncementColor - Let the bot choose from the list what color the embed will be this time.
 
-
-
 # __In-Game Set Up__
 - Stand in front of your raid crystal
 - In game Options, make sure of the following:
@@ -85,8 +83,7 @@ This is helpful if your bot is in several servers and you need to let everyone k
  - Text Speed is `Fast`
 - **Important** - The first raid after running the bot will run as Free For ALL and not post the first embed so that the bot knows where to inject the first seed.  This is normal behaviour.  
 - Start the bot
-_ _
-_ _
+
 ## __Program Setup__
 - Enter raid description as you like or leave it blank
 - To post raid embeds in a specific channel use the `aec` command.
