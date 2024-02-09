@@ -87,7 +87,6 @@ This is helpful if your bot is in several servers and you need to let everyone k
  - `SendToBoxes` is `Automatic`(in case bot catches raid mon)
  - Auto Save is `Off`
  - Text Speed is `Fast`
-- **Important** - The first raid after running the bot will run as Free For ALL and not post the first embed so that the bot knows where to inject the first seed.  This is normal behaviour.  
 - Start the bot
 
 ## __Program Setup__
