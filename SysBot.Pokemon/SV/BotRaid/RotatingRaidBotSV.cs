@@ -451,14 +451,6 @@ namespace SysBot.Pokemon.SV.BotRaid
             int upperBound = KitakamiDensCount == 25 ? 94 : 95;
             int startIndex = KitakamiDensCount == 25 ? 94 : 95;
 
-            // Skip updating SeedIndexToReplace for Might or Distribution Raids
-            if (Settings.ActiveRaids[RotationCount].CrystalType == TeraCrystalType.Might ||
-                Settings.ActiveRaids[RotationCount].CrystalType == TeraCrystalType.Distribution)
-            {
-                // Skipping SeedIndexToReplace update for Might or Distribution Raid
-                return;
-            }
-
             var data = await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerP, 2304, token).ConfigureAwait(false);
             for (int i = 0; i < 69; i++)  // Paldea Raids
             {
