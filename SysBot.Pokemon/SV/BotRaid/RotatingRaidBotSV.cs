@@ -3,9 +3,7 @@ using Newtonsoft.Json;
 using PKHeX.Core;
 using RaidCrawler.Core.Structures;
 using SysBot.Base;
-using SysBot.Pokemon.SV.BotRaid.Helpers;
 using System;
-using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -982,12 +980,14 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             var crystalType = Settings.ActiveRaids[RotationCount].CrystalType;
             var seed = uint.Parse(Settings.ActiveRaids[RotationCount].Seed, NumberStyles.AllowHexSpecifier);
+            var species = Settings.ActiveRaids[RotationCount].Species;
+            var speciesName = species.ToString();
 
             // Save the current index before changing
             int currentIndex = index;
 
-            // Check if the crystal type is either Mighty or Distribution
-            if (crystalType == TeraCrystalType.Might || crystalType == TeraCrystalType.Distribution)
+            // Check if the crystal type is either Mighty or Distribution and species is not Luvdisc
+            if (crystalType == TeraCrystalType.Might || (crystalType == TeraCrystalType.Distribution && !string.Equals(speciesName, "Luvdisc", StringComparison.OrdinalIgnoreCase)))
             {
                 // Set seed of the previous index to "000118C8" before changing the index
                 if (currentIndex != -1)
@@ -1540,44 +1540,46 @@ namespace SysBot.Pokemon.SV.BotRaid
             await Task.Delay(0_500, token).ConfigureAwait(false);
             await Click(HOME, 0_500, token).ConfigureAwait(false);
             await Click(HOME, 0_500, token).ConfigureAwait(false);
-
-            var raidInfo = Settings.ActiveRaids[RotationCount];
+            _ = Settings.ActiveRaids[RotationCount];
 
             var currentSeed = Settings.ActiveRaids[RotationCount].Seed;
-            if (denHexSeed == currentSeed)
+            if (denHexSeed != currentSeed)
             {
-                var len = string.Empty;
-                foreach (var l in Settings.ActiveRaids[RotationCount].PartyPK)
-                    len += l;
-                if (len.Length > 1 && EmptyRaid == 0)
-                {
-                    Log("Preparing PartyPK. Sit tight.");
-                    await Task.Delay(2_500 + settings.ExtraTimeLobbyDisband, token).ConfigureAwait(false);
-                    await SetCurrentBox(0, token).ConfigureAwait(false);
-                    var res = string.Join("\n", Settings.ActiveRaids[RotationCount].PartyPK);
-                    if (res.Length > 4096)
-                        res = res[..4096];
-                    await InjectPartyPk(res, token).ConfigureAwait(false);
+                Log("Raid Den and ActiveList Raid Seed do not match.  Restarting to inject correct seed.");
+                await CloseGame(Hub.Config, token).ConfigureAwait(false);
+                await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
+                await SaveGame(Hub.Config, token).ConfigureAwait(false);
+                return false;
+            }
 
-                    await Click(X, 2_000, token).ConfigureAwait(false);
-                    await Click(DRIGHT, 0_500, token).ConfigureAwait(false);
-                    await SetStick(SwitchStick.LEFT, 0, -32000, 1_000, token).ConfigureAwait(false);
-                    await SetStick(SwitchStick.LEFT, 0, 0, 0, token).ConfigureAwait(false);
-                    for (int i = 0; i < 2; i++)
-                        await Click(DDOWN, 0_500, token).ConfigureAwait(false);
-                    await Click(A, 3_500, token).ConfigureAwait(false);
-                    await Click(Y, 0_500, token).ConfigureAwait(false);
-                    await Click(DLEFT, 0_800, token).ConfigureAwait(false);
-                    await Click(Y, 0_500, token).ConfigureAwait(false);
-                    for (int i = 0; i < 2; i++)
-                        await Click(B, 1_500, token).ConfigureAwait(false);
-                    Log("PartyPK switch successful.");
-                }
-            }
-            else
+            var len = string.Empty;
+            foreach (var l in Settings.ActiveRaids[RotationCount].PartyPK)
+                len += l;
+            if (len.Length > 1 && EmptyRaid == 0)
             {
-                Log("Seeds don't match, skipping PartyPK Injection.");
+                Log("Preparing PartyPK. Sit tight.");
+                await Task.Delay(2_500 + settings.ExtraTimeLobbyDisband, token).ConfigureAwait(false);
+                await SetCurrentBox(0, token).ConfigureAwait(false);
+                var res = string.Join("\n", Settings.ActiveRaids[RotationCount].PartyPK);
+                if (res.Length > 4096)
+                    res = res[..4096];
+                await InjectPartyPk(res, token).ConfigureAwait(false);
+
+                await Click(X, 2_000, token).ConfigureAwait(false);
+                await Click(DRIGHT, 0_500, token).ConfigureAwait(false);
+                await SetStick(SwitchStick.LEFT, 0, -32000, 1_000, token).ConfigureAwait(false);
+                await SetStick(SwitchStick.LEFT, 0, 0, 0, token).ConfigureAwait(false);
+                for (int i = 0; i < 2; i++)
+                    await Click(DDOWN, 0_500, token).ConfigureAwait(false);
+                await Click(A, 3_500, token).ConfigureAwait(false);
+                await Click(Y, 0_500, token).ConfigureAwait(false);
+                await Click(DLEFT, 0_800, token).ConfigureAwait(false);
+                await Click(Y, 0_500, token).ConfigureAwait(false);
+                for (int i = 0; i < 2; i++)
+                    await Click(B, 1_500, token).ConfigureAwait(false);
+                Log("PartyPK switch successful.");
             }
+
             for (int i = 0; i < 4; i++)
                 await Click(B, 1_000, token).ConfigureAwait(false);
 
@@ -3004,57 +3006,36 @@ namespace SysBot.Pokemon.SV.BotRaid
                     bool mightGroupIDUpdated = false;
                     HashSet<int> loggedSpecies = new HashSet<int>();
 
-                    foreach (var raid in tempContainer.Raids)
+                    if (Settings.EventSettings.AutoDetectEvents)
                     {
-                        if (raid.IsEvent)
+                        if (distGroupIDs.Count > 0)
                         {
-                            bool isDistributionRaid = raid.Flags == 2; // Flag 2 for Distribution
-                            bool isMightyRaid = raid.Flags == 3;       // Flag 3 for Mighty
-                            int raidDeliveryGroupId = isDistributionRaid ? distGroupIDs.FirstOrDefault() : mightGroupIDs.FirstOrDefault();
-
-                            if (raidDeliveryGroupId != -1)
-                            {
-                                if (Settings.EventSettings.AutoDetectEvents)  // Check if AutoDetectEvents is true before changing settings
-                                {
-                                    if (isDistributionRaid && !distGroupIDUpdated)
-                                    {
-                                        Settings.EventSettings.DistGroupID = raidDeliveryGroupId;
-                                        distGroupIDUpdated = true;
-                                        Log($"Distribution Event found. Setting Group ID to {raidDeliveryGroupId}.");
-                                    }
-                                    else if (isMightyRaid && !mightGroupIDUpdated)  // Updated check for Mighty Raid
-                                    {
-                                        Settings.EventSettings.MightyGroupID = raidDeliveryGroupId;
-                                        mightGroupIDUpdated = true;
-                                        Log($"Mighty Event found.  Setting Group ID to {raidDeliveryGroupId}.");
-                                    }
-                                }
-                                else
-                                {
-                                    Log("Event Found - But AutoDetectEvents is off.  Skipping auto updating Event Settings.");
-                                }
-
-                                // Get the species info
-                                var encounter = raid.GetTeraEncounter(tempContainer, raid.IsEvent ? 3 : StoryProgress, raidDeliveryGroupId);
-                                if (encounter != null && !loggedSpecies.Contains(encounter.Species))
-                                {
-                                    var speciesName = ((Species)encounter.Species).ToString();
-                                    var areaText = $"{Areas.GetArea((int)(raid.Area - 1), raid.MapParent)} - Den {raid.Den}";
-                                    Log($"Event Raid found! {speciesName} located in {areaText}");
-                                    loggedSpecies.Add(encounter.Species);
-                                }
-                            }
-                            else
-                            {
-                                Log("Failed to determine a valid Delivery Group ID.");
-                            }
-
-                            if (Settings.EventSettings.AutoDetectEvents)
-                            {
-                                Settings.EventSettings.EventActive = true;
-                                DisableMysteryRaidsIfEventActive();
-                            }
+                            Settings.EventSettings.DistGroupID = distGroupIDs[0];
+                            distGroupIDUpdated = true;
                         }
+                        if (mightGroupIDs.Count > 0 && !mightGroupIDUpdated)
+                        {
+                            Settings.EventSettings.MightyGroupID = mightGroupIDs[0];
+                            mightGroupIDUpdated = true;
+                        }
+                        if (distGroupIDUpdated)
+                        {
+                            Log($"Distribution Event(s) found. Setting Group ID(s) accordingly.");
+                        }
+                        if (mightGroupIDUpdated)
+                        {
+                            Log($"Mighty Event found. Setting Group ID to {Settings.EventSettings.MightyGroupID}.");
+                        }
+                    }
+                    else
+                    {
+                        Log("Event(s) Found - But AutoDetectEvents is off. Skipping auto updating Event Settings.");
+                    }
+
+                    if (Settings.EventSettings.AutoDetectEvents)
+                    {
+                        Settings.EventSettings.EventActive = true;
+                        DisableMysteryRaidsIfEventActive();
                     }
                 }
             }
@@ -3141,19 +3122,9 @@ namespace SysBot.Pokemon.SV.BotRaid
             var allRaids = container.Raids;
             var allEncounters = container.Encounters;
             var allRewards = container.Rewards;
-
-            string originalSeedString = ""; // Store the original seed as a string
             uint denHexSeedUInt;
             denHexSeedUInt = uint.Parse(denHexSeed, NumberStyles.AllowHexSpecifier);
             await FindSeedIndexInRaids(denHexSeedUInt, token);
-
-            if (firstRun)
-            {
-                // Store the original seed from ActiveRaids[0]
-                originalSeedString = Settings.ActiveRaids[0].Seed; // Store it as a string
-                Settings.ActiveRaids[0].Seed = denHexSeed;
-            }
-
 
             for (int i = 0; i < allRaids.Count; i++)
             {
@@ -3229,13 +3200,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                             Settings.ActiveRaids[a].SpeciesForm = allEncounters[i].Form;
                         }
                     }
-                }
-            }
-            if (firstRun)
-            {
-                if (uint.TryParse(originalSeedString, NumberStyles.AllowHexSpecifier, null, out uint originalSeed))
-                {
-                    Settings.ActiveRaids[0].Seed = originalSeed.ToString("X8"); // Put users original seed back 
                 }
             }
         }
