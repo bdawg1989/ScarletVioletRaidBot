@@ -354,7 +354,14 @@ namespace SysBot.Pokemon.SV.BotRaid
                 // Connect online and enter den.
                 if (!await PrepareForRaid(token).ConfigureAwait(false))
                 {
-                    Log("Failed to prepare the raid, rebooting the game.");
+                    if (firstRun)
+                    {
+                        Log("Seed Injected Successfully, restarting game to complete.");
+                    }
+                    else
+                    {
+                        Log("Failed to prepare the raid, rebooting the game.");
+                    }
                     await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
                     continue;
                 }
@@ -851,16 +858,16 @@ namespace SysBot.Pokemon.SV.BotRaid
             {
                 if (Settings.ActiveRaids.Count > 1)
                 {
-                    if (RotationCount < Settings.ActiveRaids.Count && Settings.ActiveRaids.Count > 1)
-                        RotationCount++;
-                    if (RotationCount >= Settings.ActiveRaids.Count && Settings.ActiveRaids.Count > 1)
+                    RotationCount = (RotationCount + 1) % Settings.ActiveRaids.Count;
+                    if (RotationCount == 0)
                     {
-                        RotationCount = 0;
                         Log($"Resetting Rotation Count to {RotationCount}");
                     }
+
                     Log($"Moving on to next rotation for {Settings.ActiveRaids[RotationCount].Species}.");
                     await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
                 }
+
                 else
                     await StartGame(Hub.Config, token).ConfigureAwait(false);
             }
@@ -1368,7 +1375,6 @@ namespace SysBot.Pokemon.SV.BotRaid
 
                 if (firstRun)
                 {
-                    RotationCount = 0;
                     firstRun = false;
                 }
 
@@ -1545,10 +1551,11 @@ namespace SysBot.Pokemon.SV.BotRaid
             var currentSeed = Settings.ActiveRaids[RotationCount].Seed;
             if (denHexSeed != currentSeed)
             {
-                Log("Raid Den and ActiveList Raid Seed do not match.  Restarting to inject correct seed.");
+                Log("Raid Den and Current Seed do not match.  Restarting to inject correct seed.");
                 await CloseGame(Hub.Config, token).ConfigureAwait(false);
                 await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
                 await SaveGame(Hub.Config, token).ConfigureAwait(false);
+                Log("Saved the game.");
                 return false;
             }
 

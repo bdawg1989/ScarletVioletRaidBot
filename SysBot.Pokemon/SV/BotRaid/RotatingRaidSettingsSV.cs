@@ -87,11 +87,9 @@ namespace SysBot.Pokemon
             [Category(Hosting), Description("Mighty Event Group ID.  -1 means No 7 Star Event.")]
             public int MightyGroupID { get; set; } = -1;
 
-            [Category(Hosting), Description("Distribution Event #1 Group ID.  -1 means No Distribution Event.")]
+            [Category(Hosting), Description("Distribution Event Group ID.  -1 means No Distribution Event.")]
             public int DistGroupID { get; set; } = -1;
 
-            [Category(Hosting), Description("Distribution Event #2 Group ID.  -1 means No Distribution Event.\nOnly adjust if there are different Dist events at the same time like 3* and 5* Luvdisc.")]
-            public int DistGroupID2 { get; set; } = -1;
         }
 
         [Category(Hosting), TypeConverter(typeof(CategoryConverter<RotatingRaidSettingsCategory>))]
