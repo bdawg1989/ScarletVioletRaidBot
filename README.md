@@ -8,6 +8,37 @@
 
 ![image](https://github.com/bdawg1989/NotRaidBot/assets/80122551/a9aeb158-b6b6-415e-aa76-0e692d1283ce)
 
+# __Features__
+## Auto Teleport 
+- Teleports user to the nearest raid den if raid den is lost.
+## Raid Requests
+__Adding Requests__
+ - Users can request their own raids using command `ra <seed> <difficulty> <storyprogress>`.
+ - I have an online seed finder located here for your users to use: https://genpkm.com/seeds.html
+   
+__Removing Request__
+- Users can remove thier raid request by simply typing the `rqc` command.  This removes them from the queue.
+  
+__RaidView__
+- Users can view a raid embed with all the details of the raid including stats, rewards, and more!  Command `rv <seed> <difficulty> <storyprogress>`
+  
+__Disable Requests__
+- The bot owner can enable or disable requesting raids at the click of a button.
+  
+__Limit Requests__
+ - The bot owner can decide how many requests a user can submit in a certain time limit if they wish.
+   
+## Full Event Support
+- Users can request an active event they want.  The bot will auto teleport your player to the nearest Event den and proceed with overwriting the seed.
+- Auto Detects Might and Distribution Group ID's to be used. 
+## Mystery Raids
+- Don't have time to come up with your own raids to add to the list?  Turn on the Mystery Raids function and get a random shiny raid each time!
+## Disable Overworld Spawns
+- Tired of your player getting in random battles with overworld pokemon?  Turn this feature on and there will be no more overworld spawns to deal with!
+## Embed Settings
+- Tons of embed settings for the bot owner to choose from.  Customize it your way!
+## Auto Story Progress 
+- StoryProgress will automatically edit the game flags to change the story progress for you per raid!  No need for two bots anymore for "baby" raids and "adult" raids!  
 
 # __Not RaidBot Guide__
 
