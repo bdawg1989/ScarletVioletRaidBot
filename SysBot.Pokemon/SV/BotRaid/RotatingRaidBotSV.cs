@@ -3144,15 +3144,19 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
             var storyProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel;
 
-            // Make sure to use the correct seed variable here
             var (pk2, embed) = RaidInfoCommand(denHexSeed, contentType, map, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
 
             ParseAndPopulateRaidEmbedInfo(pk2, embed);
+
+            var currentSeed = Settings.ActiveRaids[RotationCount].Seed;
             // Update Species and SpeciesForm in ActiveRaids
-            if (!Settings.ActiveRaids[RotationCount].ForceSpecificSpecies)
+            if (denHexSeed == currentSeed)
             {
-                Settings.ActiveRaids[RotationCount].Species = RaidEmbedInfo.RaidSpecies;
-                Settings.ActiveRaids[RotationCount].SpeciesForm = RaidEmbedInfo.RaidSpeciesForm;
+                if (!Settings.ActiveRaids[RotationCount].ForceSpecificSpecies)
+                {
+                    Settings.ActiveRaids[RotationCount].Species = RaidEmbedInfo.RaidSpecies;
+                    Settings.ActiveRaids[RotationCount].SpeciesForm = RaidEmbedInfo.RaidSpeciesForm;
+                }
             }
         }
 
