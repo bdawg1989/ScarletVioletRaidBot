@@ -3133,20 +3133,12 @@ namespace SysBot.Pokemon.SV.BotRaid
             int raidDeliveryGroupID = isDistributionRaid ? Settings.EventSettings.DistGroupID : Settings.EventSettings.MightyGroupID;
 
             var contentType = (int)Settings.ActiveRaids[RotationCount].CrystalType;
-            TeraRaidMapParent map = TeraRaidMapParent.Paldea;
-            if (IsBlueberry)
-            {
-                map = TeraRaidMapParent.Blueberry;
-            }
-            else if (IsKitakami)
-            {
-                map = TeraRaidMapParent.Kitakami;
-            }
-            var storyProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel;
+            var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
+            var storyProgressLevel = StoryProgress;
 
-            var (pk2, embed) = RaidInfoCommand(denHexSeed, contentType, map, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
+            var (pk, embed) = RaidInfoCommand(denHexSeed, contentType, selectedMap, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
 
-            ParseAndPopulateRaidEmbedInfo(pk2, embed);
+            ParseAndPopulateRaidEmbedInfo(pk, embed);
 
             var currentSeed = Settings.ActiveRaids[RotationCount].Seed;
             // Update Species and SpeciesForm in ActiveRaids
