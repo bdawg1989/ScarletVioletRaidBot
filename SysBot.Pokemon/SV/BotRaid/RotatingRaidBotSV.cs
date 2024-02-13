@@ -3134,7 +3134,7 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             var contentType = (int)Settings.ActiveRaids[RotationCount].CrystalType;
             var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
-            var storyProgressLevel = StoryProgress;
+            var storyProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel + 1;
 
             var (pk, embed) = RaidInfoCommand(denHexSeed, contentType, selectedMap, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
 
