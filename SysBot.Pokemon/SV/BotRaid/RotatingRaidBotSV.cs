@@ -3133,21 +3133,21 @@ namespace SysBot.Pokemon.SV.BotRaid
             int raidDeliveryGroupID = isDistributionRaid ? Settings.EventSettings.DistGroupID : Settings.EventSettings.MightyGroupID;
 
             var contentType = (int)Settings.ActiveRaids[RotationCount].CrystalType;
-                    TeraRaidMapParent map = TeraRaidMapParent.Paldea; 
-                    if (IsBlueberry) 
-                    {
-                        map = TeraRaidMapParent.Blueberry;
-                    }
-                    else if (IsKitakami)
-                    {
-                        map = TeraRaidMapParent.Kitakami;
-                    }
-                    var storyProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel;
+            TeraRaidMapParent map = TeraRaidMapParent.Paldea;
+            if (IsBlueberry)
+            {
+                map = TeraRaidMapParent.Blueberry;
+            }
+            else if (IsKitakami)
+            {
+                map = TeraRaidMapParent.Kitakami;
+            }
+            var storyProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel;
 
-                    // Make sure to use the correct seed variable here
-                    var (pk2, embed) = RaidInfoCommand(denHexSeed, contentType, map, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
+            // Make sure to use the correct seed variable here
+            var (pk2, embed) = RaidInfoCommand(denHexSeed, contentType, map, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
 
-                    ParseAndPopulateRaidEmbedInfo(pk2, embed);
+            ParseAndPopulateRaidEmbedInfo(pk2, embed);
             // Update Species and SpeciesForm in ActiveRaids
             if (!Settings.ActiveRaids[RotationCount].ForceSpecificSpecies)
             {
@@ -3209,7 +3209,7 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             string titlePrefix = pk.IsShiny ? "Shiny " : "";
             var pkinfo = RaidExtensions<PK9>.GetRaidPrintName(pk);
-            
+
             RaidEmbedInfo.RaidSpecies = (Species)pk.Species;
             RaidEmbedInfo.RaidSpeciesForm = pk.Form;
             RaidEmbedInfo.RaidSpeciesGender = pk.Gender == 0 ? "Male" : pk.Gender == 1 ? "Female" : "Genderless";
@@ -3225,7 +3225,7 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private string ExtractValue(string stat)
         {
-            var value = stat.Split(':')[1].Trim(); 
+            var value = stat.Split(':')[1].Trim();
             value = value.TrimStart('*', ' ').Trim();
             return value;
         }
