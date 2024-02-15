@@ -2921,42 +2921,30 @@ namespace SysBot.Pokemon.SV.BotRaid
             var allEncounters = new List<ITeraRaid>();
             var allRewards = new List<List<(int, int, int)>>();
 
-            if (IsBlueberry)
-            {
-                // Process only Blueberry raids
-                var dataB = await ReadBlueberryRaids(token);
-                Log("Reading Blueberry Raids...");
-                var (blueberryRaids, blueberryEncounters, blueberryRewards) = await ProcessRaids(dataB, TeraRaidMapParent.Blueberry, token);
-                allRaids.AddRange(blueberryRaids);
-                allEncounters.AddRange(blueberryEncounters);
-                allRewards.AddRange(blueberryRewards);
-            }
-            else if (IsKitakami)
-            {
-                // Process only Kitakami raids
-                var dataK = await ReadKitakamiRaids(token);
-                Log("Reading Kitakami Raids...");
-                var (kitakamiRaids, kitakamiEncounters, kitakamiRewards) = await ProcessRaids(dataK, TeraRaidMapParent.Kitakami, token);
-                allRaids.AddRange(kitakamiRaids);
-                allEncounters.AddRange(kitakamiEncounters);
-                allRewards.AddRange(kitakamiRewards);
-            }
-            else
-            {
-                // Default to processing Paldea raids
-                var dataP = await ReadPaldeaRaids(token);
-                Log("Reading Paldea Raids...");
-                var (paldeaRaids, paldeaEncounters, paldeaRewards) = await ProcessRaids(dataP, TeraRaidMapParent.Paldea, token);
-                allRaids.AddRange(paldeaRaids);
-                allEncounters.AddRange(paldeaEncounters);
-                allRewards.AddRange(paldeaRewards);
-            }
+            Log("Reading Raids... hold tight.");
+            var dataB = await ReadBlueberryRaids(token);
+            var (blueberryRaids, blueberryEncounters, blueberryRewards) = await ProcessRaids(dataB, TeraRaidMapParent.Blueberry, token);
+            allRaids.AddRange(blueberryRaids);
+            allEncounters.AddRange(blueberryEncounters);
+            allRewards.AddRange(blueberryRewards);
 
-            // Set combined data to container and process all raids
+            var dataK = await ReadKitakamiRaids(token);
+            var (kitakamiRaids, kitakamiEncounters, kitakamiRewards) = await ProcessRaids(dataK, TeraRaidMapParent.Kitakami, token);
+            allRaids.AddRange(kitakamiRaids);
+            allEncounters.AddRange(kitakamiEncounters);
+            allRewards.AddRange(kitakamiRewards);
+
+            var dataP = await ReadPaldeaRaids(token);
+            var (paldeaRaids, paldeaEncounters, paldeaRewards) = await ProcessRaids(dataP, TeraRaidMapParent.Paldea, token);
+            allRaids.AddRange(paldeaRaids);
+            allEncounters.AddRange(paldeaEncounters);
+            allRewards.AddRange(paldeaRewards);
+
             container.SetRaids(allRaids);
             container.SetEncounters(allEncounters);
             container.SetRewards(allRewards);
-            await ProcessAllRaids(token);
+
+            await GetDenData(token);
         }
 
         private async Task<(List<Raid>, List<ITeraRaid>, List<List<(int, int, int)>>)> ProcessRaids(byte[] data, TeraRaidMapParent mapType, CancellationToken token)
@@ -2965,11 +2953,12 @@ namespace SysBot.Pokemon.SV.BotRaid
             var tempContainer = new RaidContainer(container.Game);
             tempContainer.SetGame(container.Game);
 
-            Log("Reading event raid status...");
-            // Read event raids into tempContainer
-            var BaseBlockKeyPointer = await SwitchConnection.PointerAll(Offsets.BlockKeyPointer, token).ConfigureAwait(false);
-            await ReadEventRaids(BaseBlockKeyPointer, tempContainer, token).ConfigureAwait(false);
-            await ReadEventRaids(BaseBlockKeyPointer, container, token).ConfigureAwait(false);
+            if (!IsKitakami && !IsBlueberry)
+            {
+                var BaseBlockKeyPointer = await SwitchConnection.PointerAll(Offsets.BlockKeyPointer, token).ConfigureAwait(false);
+                await ReadEventRaids(BaseBlockKeyPointer, tempContainer, token).ConfigureAwait(false);
+                await ReadEventRaids(BaseBlockKeyPointer, container, token).ConfigureAwait(false);
+            }
 
             (delivery, enc) = tempContainer.ReadAllRaids(data, StoryProgress, EventProgress, 0, mapType);
 
@@ -2982,11 +2971,10 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             if (delivery > 0)
             {
-                Log($"Invalid delivery group ID for {delivery} raid(s) in {mapType}. Try deleting the \"cache\" folder.");
                 if (mapType == TeraRaidMapParent.Paldea)
                 {
                     InvalidDeliveryGroupCount = delivery;
-                    totalRaidsProcessed += delivery; // Add the number of invalid delivery group IDs to total raids processed
+                    totalRaidsProcessed += delivery;
                 }
             }
 
@@ -3096,7 +3084,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             return dataB;
         }
 
-        private (List<int> distGroupIDs, List<int> mightGroupIDs) GetPossibleGroups(RaidContainer container)
+        private static (List<int> distGroupIDs, List<int> mightGroupIDs) GetPossibleGroups(RaidContainer container)
         {
             List<int> distGroupIDs = new List<int>();
             List<int> mightGroupIDs = new List<int>();
@@ -3122,7 +3110,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             return (distGroupIDs, mightGroupIDs);
         }
 
-        private async Task ProcessAllRaids(CancellationToken token)
+        private async Task GetDenData(CancellationToken token)
         {
             uint denHexSeedUInt;
             denHexSeedUInt = uint.Parse(denHexSeed, NumberStyles.AllowHexSpecifier);
