@@ -4,7 +4,6 @@ using PKHeX.Core;
 using RaidCrawler.Core.Structures;
 using SysBot.Base;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
@@ -2921,43 +2920,30 @@ namespace SysBot.Pokemon.SV.BotRaid
             var allEncounters = new List<ITeraRaid>();
             var allRewards = new List<List<(int, int, int)>>();
 
-            if (IsBlueberry)
-            {
-                // Process only Blueberry raids
-                var dataB = await ReadBlueberryRaids(token);
-                Log("Reading Blueberry Raids...");
-                var (blueberryRaids, blueberryEncounters, blueberryRewards) = await ProcessRaids(dataB, TeraRaidMapParent.Blueberry, token);
-                allRaids.AddRange(blueberryRaids);
-                allEncounters.AddRange(blueberryEncounters);
-                allRewards.AddRange(blueberryRewards);
-            }
-            else if (IsKitakami)
-            {
-                // Process only Kitakami raids
-                var dataK = await ReadKitakamiRaids(token);
-                Log("Reading Kitakami Raids...");
-                var (kitakamiRaids, kitakamiEncounters, kitakamiRewards) = await ProcessRaids(dataK, TeraRaidMapParent.Kitakami, token);
-                allRaids.AddRange(kitakamiRaids);
-                allEncounters.AddRange(kitakamiEncounters);
-                allRewards.AddRange(kitakamiRewards);
-            }
-            else
-            {
-                // Default to processing Paldea raids
-                var dataP = await ReadPaldeaRaids(token);
-                Log("Reading Paldea Raids...");
-                var (paldeaRaids, paldeaEncounters, paldeaRewards) = await ProcessRaids(dataP, TeraRaidMapParent.Paldea, token);
-                allRaids.AddRange(paldeaRaids);
-                allEncounters.AddRange(paldeaEncounters);
-                allRewards.AddRange(paldeaRewards);
-            }
+            Log("Reading Raids... hold tight.");
+            var dataB = await ReadBlueberryRaids(token);
+            var (blueberryRaids, blueberryEncounters, blueberryRewards) = await ProcessRaids(dataB, TeraRaidMapParent.Blueberry, token);
+            allRaids.AddRange(blueberryRaids);
+            allEncounters.AddRange(blueberryEncounters);
+            allRewards.AddRange(blueberryRewards);
 
-            // Set combined data to container and process all raids
+            var dataK = await ReadKitakamiRaids(token);
+            var (kitakamiRaids, kitakamiEncounters, kitakamiRewards) = await ProcessRaids(dataK, TeraRaidMapParent.Kitakami, token);
+            allRaids.AddRange(kitakamiRaids);
+            allEncounters.AddRange(kitakamiEncounters);
+            allRewards.AddRange(kitakamiRewards);
+
+            var dataP = await ReadPaldeaRaids(token);
+            var (paldeaRaids, paldeaEncounters, paldeaRewards) = await ProcessRaids(dataP, TeraRaidMapParent.Paldea, token);
+            allRaids.AddRange(paldeaRaids);
+            allEncounters.AddRange(paldeaEncounters);
+            allRewards.AddRange(paldeaRewards);
+
             container.SetRaids(allRaids);
             container.SetEncounters(allEncounters);
             container.SetRewards(allRewards);
 
-            GetDenData(token);
+            await GetDenData(token);
         }
 
         private async Task<(List<Raid>, List<ITeraRaid>, List<List<(int, int, int)>>)> ProcessRaids(byte[] data, TeraRaidMapParent mapType, CancellationToken token)
@@ -3123,54 +3109,34 @@ namespace SysBot.Pokemon.SV.BotRaid
             return (distGroupIDs, mightGroupIDs);
         }
 
-        private void GetDenData(CancellationToken token)
+        private async Task GetDenData(CancellationToken token)
         {
-            uint denHexSeedUInt = uint.Parse(denHexSeed, NumberStyles.AllowHexSpecifier);
-            int index = FindSeedIndexInRaids(denHexSeedUInt);
+            uint denHexSeedUInt;
+            denHexSeedUInt = uint.Parse(denHexSeed, NumberStyles.AllowHexSpecifier);
+            await FindSeedIndexInRaids(denHexSeedUInt, token);
 
-            if (index == -1)
-            {
-                Log("No matching seed found in the raids data.");
-                return;
-            }
-
-            Raid specificRaid = container.Raids[index];
+            var specificRaid = container.Raids[SeedIndexToReplace];
             bool isDistributionRaid = specificRaid.Flags == 2;
             int raidDeliveryGroupID = isDistributionRaid ? Settings.EventSettings.DistGroupID : Settings.EventSettings.MightyGroupID;
 
-            int contentType = (int)Settings.ActiveRaids[RotationCount].CrystalType;
-            TeraRaidMapParent selectedMap = DetermineMap();
-            int storyProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel + 1;
+            var contentType = (int)Settings.ActiveRaids[RotationCount].CrystalType;
+            var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
+            var storyProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel + 1;
 
-            (PK9 pk, Embed embed) = RaidInfoCommand(denHexSeed, contentType, selectedMap, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
+            var (pk, embed) = RaidInfoCommand(denHexSeed, contentType, selectedMap, storyProgressLevel, raidDeliveryGroupID, Settings.EmbedToggles.RewardsToShow);
 
             ParseAndPopulateRaidEmbedInfo(pk, embed);
 
-            // Compare the denHexSeed with the current seed in active raids to decide on updating species info
-            if (denHexSeed == Settings.ActiveRaids[RotationCount].Seed && !Settings.ActiveRaids[RotationCount].ForceSpecificSpecies)
+            var currentSeed = Settings.ActiveRaids[RotationCount].Seed;
+            // Update Species and SpeciesForm in ActiveRaids
+            if (denHexSeed == currentSeed)
             {
-                Settings.ActiveRaids[RotationCount].Species = RaidEmbedInfo.RaidSpecies;
-                Settings.ActiveRaids[RotationCount].SpeciesForm = RaidEmbedInfo.RaidSpeciesForm;
-            }
-        }
-
-        private static int FindSeedIndexInRaids(uint denHexSeedUInt)
-        {
-            for (int i = 0; i < container.Raids.Count; i++)
-            {
-                if (container.Raids[i].Seed == denHexSeedUInt)
+                if (!Settings.ActiveRaids[RotationCount].ForceSpecificSpecies)
                 {
-                    return i;
+                    Settings.ActiveRaids[RotationCount].Species = RaidEmbedInfo.RaidSpecies;
+                    Settings.ActiveRaids[RotationCount].SpeciesForm = RaidEmbedInfo.RaidSpeciesForm;
                 }
             }
-            return -1;
-        }
-
-        private static TeraRaidMapParent DetermineMap()
-        {
-            if (IsBlueberry) return TeraRaidMapParent.Blueberry;
-            if (IsKitakami) return TeraRaidMapParent.Kitakami;
-            return TeraRaidMapParent.Paldea;
         }
 
         private void ParseAndPopulateRaidEmbedInfo(PK9 pk, Embed embed)
@@ -3247,7 +3213,49 @@ namespace SysBot.Pokemon.SV.BotRaid
             return value;
         }
 
+        private async Task FindSeedIndexInRaids(uint denHexSeedUInt, CancellationToken token)
+        {
+            var upperBound = KitakamiDensCount == 25 ? 94 : 95;
+            var startIndex = KitakamiDensCount == 25 ? 94 : 95;
 
+            // Search in Paldea region
+            var dataP = await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerP, 2304, token).ConfigureAwait(false);
+            for (int i = 0; i < 69; i++)
+            {
+                var seed = BitConverter.ToUInt32(dataP.AsSpan(0x20 + i * 0x20, 4));
+                if (seed == denHexSeedUInt)
+                {
+                    SeedIndexToReplace = i;
+                    return;
+                }
+            }
+
+            // Search in Kitakami region
+            var dataK = await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerK + 0x10, 0xC80, token).ConfigureAwait(false);
+            for (int i = 0; i < upperBound; i++)
+            {
+                var seed = BitConverter.ToUInt32(dataK.AsSpan(i * 0x20, 4));
+                if (seed == denHexSeedUInt)
+                {
+                    SeedIndexToReplace = i + 69;
+                    return;
+                }
+            }
+
+            // Search in Blueberry region
+            var dataB = await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerB + 0x10, 0xA00, token).ConfigureAwait(false);
+            for (int i = startIndex; i < 118; i++)
+            {
+                var seed = BitConverter.ToUInt32(dataB.AsSpan((i - startIndex) * 0x20, 4));
+                if (seed == denHexSeedUInt)
+                {
+                    SeedIndexToReplace = i - 1;
+                    return;
+                }
+            }
+
+            Log($"Seed {denHexSeedUInt:X8} not found in any region.");
+        }
 
         public static (PK9, Embed) RaidInfoCommand(string seedValue, int contentType, TeraRaidMapParent map, int storyProgressLevel, int raidDeliveryGroupID, List<string> rewardsToShow, int queuePosition = 0, bool isEvent = false)
         {
