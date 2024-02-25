@@ -121,6 +121,11 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Size = 1,
             };
 
+            public static void AdjustKWildSpawnsEnabledType(bool disableOverworldSpawns)
+            {
+                KWildSpawnsEnabled.Type = disableOverworldSpawns ? SCTypeCode.Bool1 : SCTypeCode.Bool2;
+            }
+
             public static readonly DataBlock KCoordinates = new()
             {
                 Name = "KCoordinates",

@@ -59,7 +59,8 @@ namespace SysBot.Pokemon
             public bool SpriteAlternateArt { get; set; } = false;
             public string Seed { get; set; } = "0";
             public Action1Type Action1 { get; set; } = Action1Type.GoAllOut;
-            public int Action1Delay { get; set; } = 5; // Default delay of 5 seconds
+            public int Action1Delay { get; set; } = 5;
+            public int GroupID { get; set; } = 0;
             public string Title { get; set; } = string.Empty;
             [Browsable(false)]
             public bool AddedByRACommand { get; set; } = false;
@@ -68,7 +69,7 @@ namespace SysBot.Pokemon
             [Browsable(false)]
             public string RequestCommand { get; set; } = string.Empty;
             [Browsable(false)]
-            public ulong RequestedByUserID { get; set; } // Add this line for User ID
+            public ulong RequestedByUserID { get; set; }
             [Browsable(false)]
             [System.Text.Json.Serialization.JsonIgnore]
             public SocketUser? User { get; set; }
@@ -78,17 +79,9 @@ namespace SysBot.Pokemon
         public class EventSettingsCategory
         {
             public override string ToString() => "Event Settings";
-            [Category(Hosting), Description("Set to \"false\" to stop Event settings from changing automatically if Event is found in Overworld.")]
-            public bool AutoDetectEvents { get; set; } = false;
 
             [Category(Hosting), Description("Set to \"true\" when events are active to properly process level 7 (event) and level 5 (distribution) raids.")]
             public bool EventActive { get; set; } = false;
-
-            [Category(Hosting), Description("Mighty Event Group ID.  -1 means No 7 Star Event.")]
-            public int MightyGroupID { get; set; } = -1;
-
-            [Category(Hosting), Description("Distribution Event Group ID.  -1 means No Distribution Event.")]
-            public int DistGroupID { get; set; } = -1;
 
         }
 

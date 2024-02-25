@@ -32,7 +32,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             string seedValue,
             int level,
             int storyProgressLevel = 6,
-            string? eventType = null)
+            string? speciesName = null)
         {
             uint seed;
             try
@@ -55,23 +55,33 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             var settings = Hub.Config.RotatingRaidSV;  // Get RotatingRaidSV settings
 
+            bool isEvent = !string.IsNullOrEmpty(speciesName);
+
+            int raidDeliveryGroupID = -1;
+            if (!string.IsNullOrEmpty(speciesName) && SpeciesToGroupIDMap.TryGetValue(speciesName, out var groupIDAndIndices))
+            {
+                var firstRaidGroupID = groupIDAndIndices.First().GroupID;
+                raidDeliveryGroupID = firstRaidGroupID;
+            }
+            else if (!string.IsNullOrEmpty(speciesName))
+            {
+                await ReplyAsync("Species name not recognized or not associated with an active event. Please check the name and try again.");
+                return;
+            }
+
             var crystalType = level switch
             {
-                >= 1 and <= 5 => eventType == "Event" ? (TeraCrystalType)2 : (TeraCrystalType)0,
+                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : (TeraCrystalType)0,
                 6 => (TeraCrystalType)1,
                 7 => (TeraCrystalType)3,
                 _ => throw new ArgumentException("Invalid difficulty level.")
             };
 
-            // Check if event type is specified but events are turned off
-            if (eventType == "Event" && !settings.EventSettings.EventActive)
+            if (isEvent && !settings.EventSettings.EventActive)
             {
                 await ReplyAsync("Sorry, but the Event Setting is turned off at this time or there are no Events active.").ConfigureAwait(false);
                 return;
             }
-
-            var raidDeliveryGroupID = (level == 7) ? settings.EventSettings.MightyGroupID : settings.EventSettings.DistGroupID;  // Use MightyGroupID for 7 star, otherwise use DistGroupID
-            var isEvent = eventType == "Event";
 
             try
             {
@@ -88,20 +98,15 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 {
                     if (reaction.UserId == Context.User.Id && reaction.Emote.Name == checkmarkEmoji.Name)
                     {
-                        await AddNewRaidParamNext(seedValue, level, storyProgressLevel, eventType);
+                        await AddNewRaidParamNext(seedValue, level, storyProgressLevel, speciesName);
 
                         SysCord<T>.ReactionService.RemoveReactionHandler(reaction.MessageId);
                     }
                 });
                 _ = Task.Run(async () =>
                 {
-                    // Delay for 1 minute
                     await Task.Delay(TimeSpan.FromMinutes(1));
-
-                    // Remove the reaction handler
                     SysCord<T>.ReactionService.RemoveReactionHandler(message.Id);
-
-                    // Delete the messages
                     await message.DeleteAsync();
                     await instructionMessage.DeleteAsync();
                 });
@@ -154,10 +159,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             Hub.Config.RotatingRaidSV.RaiderBanList.AddIfNew(new[] { GetReference(nidToBan, ot, "") });
 
-            // Optionally, save the ban list to persist the changes
-            // SaveBanListMethod(Hub.Config.RaiderBanList);
-
-            // Notify the command issuer that the ban was successful.
             await ReplyAsync($"Player with OT '{ot}' has been banned.");
         }
 
@@ -219,7 +220,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             string nameToAdd = "";
             string type = "";
 
-            // Check if mention is a user
             if (MentionUtils.TryParseUser(mention, out idToAdd))
             {
                 var user = Context.Guild.GetUser(idToAdd);
@@ -320,43 +320,52 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             [Summary("Seed")] string seed,
             [Summary("Difficulty Level (1-7)")] int level,
             [Summary("Story Progress Level")] int storyProgressLevel = 6,
-            [Summary("Event (Optional)")] string? eventType = null)  // New optional parameter for specifying event type
+            [Summary("Species Name (Optional)")] string? speciesName = null)
         {
-            // Validate the seed for hexadecimal format
             if (seed.Length != 8 || !seed.All(c => "0123456789abcdefABCDEF".Contains(c)))
             {
                 await ReplyAsync("Invalid seed format. Please enter a seed consisting of exactly 8 hexadecimal digits.").ConfigureAwait(false);
                 return;
             }
-            if (level < 1 || level > 7)  // Adjusted level range to 1-7
+            if (level < 1 || level > 7) 
             {
                 await ReplyAsync("Invalid raid level. Please enter a level between 1 and 7.").ConfigureAwait(false);  // Adjusted message to reflect new level range
                 return;
             }
 
-            // Convert StoryProgressLevel to GameProgress enum value
             var gameProgress = ConvertToGameProgress(storyProgressLevel);
 
-            // Get the settings object from Hub
             var settings = Hub.Config.RotatingRaidSV;
+            bool isEvent = !string.IsNullOrEmpty(speciesName);
 
             var crystalType = level switch
             {
-                >= 1 and <= 5 => eventType == "Event" ? (TeraCrystalType)2 : (TeraCrystalType)0,
+                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : (TeraCrystalType)0,
                 6 => (TeraCrystalType)1,
                 7 => (TeraCrystalType)3,
                 _ => throw new ArgumentException("Invalid difficulty level.")
             };
 
-            // Check if event type is specified but events are turned off
-            if (eventType == "Event" && !settings.EventSettings.EventActive)
+            int raidDeliveryGroupID = -1;
+
+            if (!string.IsNullOrEmpty(speciesName) && SpeciesToGroupIDMap.TryGetValue(speciesName, out var groupIDAndIndices))
+            {
+                var firstRaidGroupID = groupIDAndIndices.First().GroupID;
+                raidDeliveryGroupID = firstRaidGroupID;
+            }
+            else if (!string.IsNullOrEmpty(speciesName))
+            {
+                await ReplyAsync("Species name not recognized or not associated with an active event. Please check the name and try again.");
+                return;
+            }
+
+            if (isEvent && !settings.EventSettings.EventActive)
             {
                 await ReplyAsync("Sorry, but the Event Setting is turned off at this time or there are no Events active.").ConfigureAwait(false);
                 return;
             }
 
             var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
-            var raidDeliveryGroupID = settings.EventSettings.MightyGroupID;
             var rewardsToShow = settings.EmbedToggles.RewardsToShow;
             var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow);
             var description = string.Empty;
@@ -414,17 +423,14 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             [Summary("Seed")] string seed,
             [Summary("Difficulty Level (1-7)")] int level,
             [Summary("Story Progress Level")] int storyProgressLevel = 6,
-            [Summary("Event (Optional)")] string? eventType = null)  // New argument for specifying an event
+            [Summary("Species Name (Optional)")] string? speciesName = null) 
         {
             var botPrefix = SysCord<T>.Runner.Config.Discord.CommandPrefix;
-            // Check if raid requests are disabled by the host
             if (Hub.Config.RotatingRaidSV.RaidSettings.DisableRequests)
             {
                 await ReplyAsync("Raid Requests are currently disabled by the host.").ConfigureAwait(false);
                 return;
             }
-
-            // Ensure Compatible Difficulty and Story Progress level
             var compatible = CheckProgressandLevel(level, storyProgressLevel);
             if (!compatible)
             {
@@ -432,7 +438,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
 
-            // Check if the user already has a request
             var userId = Context.User.Id;
             if (Hub.Config.RotatingRaidSV.ActiveRaids.Any(r => r.RequestedByUserID == userId))
             {
@@ -449,7 +454,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 {
                     string responseMessage = $"You have reached your request limit. Please wait {remainingCooldown.TotalMinutes:N0} minutes before making another request.";
 
-                    // Append the custom LimitRequestMsg if it's set
                     if (!string.IsNullOrWhiteSpace(Hub.Config.RotatingRaidSV.RaidSettings.LimitRequestMsg))
                     {
                         responseMessage += $"\n{Hub.Config.RotatingRaidSV.RaidSettings.LimitRequestMsg}";
@@ -460,7 +464,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 }
             }
 
-            // Validate the seed for hexadecimal format
             if (seed.Length != 8 || !seed.All(c => "0123456789abcdefABCDEF".Contains(c)))
             {
                 await ReplyAsync("Invalid seed format. Please enter a seed consisting of exactly 8 hexadecimal digits.").ConfigureAwait(false);
@@ -472,37 +475,41 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 await ReplyAsync("Invalid raid level. Please enter a level between 1 and 7.").ConfigureAwait(false);  // Adjusted message to reflect new level range
                 return;
             }
-
-            // Convert StoryProgressLevel to GameProgress enum value
             var gameProgress = ConvertToGameProgress(storyProgressLevel);
             if (gameProgress == GameProgress.None)
             {
                 await ReplyAsync("Invalid Story Progress Level. Please enter a value between 1 and 6.").ConfigureAwait(false);
                 return;
             }
-
-            // Get the settings object from Hub
             var settings = Hub.Config.RotatingRaidSV;
+            bool isEvent = !string.IsNullOrEmpty(speciesName);
 
             var crystalType = level switch
             {
-                >= 1 and <= 5 => eventType == "Event" ? (TeraCrystalType)2 : (TeraCrystalType)0,
+                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : (TeraCrystalType)0,
                 6 => (TeraCrystalType)1,
                 7 => (TeraCrystalType)3,
                 _ => throw new ArgumentException("Invalid difficulty level.")
             };
 
-            // Determine the correct Group ID based on event type
-            var raidDeliveryGroupID = (level == 7) ? settings.EventSettings.MightyGroupID : settings.EventSettings.DistGroupID;
+            int raidDeliveryGroupID = -1;
 
-            // Check if event type is specified but events are turned off
-            if (eventType == "Event" && !settings.EventSettings.EventActive)
+            if (!string.IsNullOrEmpty(speciesName) && SpeciesToGroupIDMap.TryGetValue(speciesName, out var groupIDAndIndices))
+            {
+                var firstRaidGroupID = groupIDAndIndices.First().GroupID;
+                raidDeliveryGroupID = firstRaidGroupID;
+            }
+            else if (!string.IsNullOrEmpty(speciesName))
+            {
+                await ReplyAsync("Species name not recognized or not associated with an active event. Please check the name and try again.");
+                return;
+            }
+
+            if (isEvent && !settings.EventSettings.EventActive)
             {
                 await ReplyAsync("Sorry, but the Event Setting is turned off at this time or there are no Events active.").ConfigureAwait(false);
                 return;
             }
-
-            // If EventActive is true, force storyProgressLevel to 6
             if (settings.EventSettings.EventActive && storyProgressLevel != 6)
             {
                 await ReplyAsync("Currently only Story Progress Level 6 (6* Unlocked) is allowed due to Active Event Settings.").ConfigureAwait(false);
@@ -542,10 +549,11 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 Seed = seed,
                 IsCoded = true,
                 IsShiny = pk.IsShiny,
+                GroupID = raidDeliveryGroupID,
                 AddedByRACommand = true,
-                RequestCommand = $"{botPrefix}ra {seed} {level} {storyProgressLevel}{(eventType != null ? $" {eventType}" : "")}",
+                RequestCommand = $"{botPrefix}ra {seed} {level} {storyProgressLevel}{(isEvent ? $" {speciesName}" : "")}",
                 RequestedByUserID = Context.User.Id,
-                Title = $"{Context.User.Username}'s Requested Raid{(eventType == "Event" ? " (Event Raid)" : "")}",
+                Title = $"{Context.User.Username}'s Requested Raid{(isEvent ? $" ({speciesName} Event Raid)" : "")}",
                 RaidUpNext = false,
                 User = Context.User,
             };

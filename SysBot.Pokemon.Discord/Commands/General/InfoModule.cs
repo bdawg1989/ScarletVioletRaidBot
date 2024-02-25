@@ -14,14 +14,20 @@ namespace SysBot.Pokemon.Discord
     // Copyright 2017, Christopher F. <foxbot@protonmail.com>
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
-        private const string detail = "I am a custom Raid Bot made by Gengar and Kai that accepts raid requests, and much more.";
+        private const string detail = "I am an Open Source RaidBot powered by PKHeX.Core and other open-source software.";
         public const string version = NotRaidBot.Version;
-        private const string support = NotRaidBot.Attribution;
+        private const string support = NotRaidBot.Repo;
+        private const ulong DisallowedUserId = 195756980873199618;
 
         [Command("info")]
         [Alias("about", "whoami", "owner")]
         public async Task InfoAsync()
         {
+            if (Context.User.Id == DisallowedUserId)
+            {
+                await ReplyAsync("We don't let shady people use this command.").ConfigureAwait(false);
+                return;
+            }
             var app = await Context.Client.GetApplicationInfoAsync().ConfigureAwait(false);
             var programIconUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/icon4.png";
             var builder = new EmbedBuilder
@@ -33,7 +39,7 @@ namespace SysBot.Pokemon.Discord
 
             builder.AddField("# __Bot Info__",
                 $"- **Version**: {version}\n" +
-                $"- [Download NotRaidBot]({support})\n" +
+                $"- [Download NotRaidBot]({support})\n- [Join Our Discord!](https://notpaldea.net)\n" +
                 $"- {Format.Bold("Owner")}: {app.Owner} ({app.Owner.Id})\n" +
                 $"- {Format.Bold("Uptime")}: {GetUptime()}\n" +
                 $"- {Format.Bold("Core Version")}: {GetVersionInfo("PKHeX.Core")}\n" +
