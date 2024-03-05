@@ -1545,8 +1545,8 @@ namespace SysBot.Pokemon.SV.BotRaid
             await Click(HOME, 0_500, token).ConfigureAwait(false);
             _ = Settings.ActiveRaids[RotationCount];
 
-            var currentSeed = Settings.ActiveRaids[RotationCount].Seed;
-            if (denHexSeed != currentSeed)
+            var currentSeed = Settings.ActiveRaids[RotationCount].Seed.ToUpper();
+            if (denHexSeed.ToUpper() != currentSeed)
             {
                 Log("Raid Den and Current Seed do not match.  Restarting to inject correct seed.");
                 await CloseGame(Hub.Config, token).ConfigureAwait(false);
