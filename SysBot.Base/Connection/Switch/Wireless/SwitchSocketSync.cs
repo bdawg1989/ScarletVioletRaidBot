@@ -12,7 +12,9 @@ namespace SysBot.Base
     /// </remarks>
     public sealed class SwitchSocketSync : SwitchSocket, ISwitchConnectionSync
     {
-        public SwitchSocketSync(IWirelessConnectionConfig cfg) : base(cfg) { }
+        public SwitchSocketSync(IWirelessConnectionConfig cfg) : base(cfg)
+        {
+        }
 
         public override void Connect()
         {
@@ -35,6 +37,7 @@ namespace SysBot.Base
         }
 
         private int Read(byte[] buffer) => Connection.Receive(buffer);
+
         public int Send(byte[] buffer) => Connection.Send(buffer);
 
         private byte[] ReadResponse(int length)
@@ -63,11 +66,15 @@ namespace SysBot.Base
         }
 
         public byte[] ReadBytes(uint offset, int length) => Read(offset, length, Heap);
+
         public byte[] ReadBytesMain(ulong offset, int length) => Read(offset, length, Main);
+
         public byte[] ReadBytesAbsolute(ulong offset, int length) => Read(offset, length, Absolute);
 
         public void WriteBytes(byte[] data, uint offset) => Write(data, offset, Heap);
+
         public void WriteBytesMain(byte[] data, ulong offset) => Write(data, offset, Main);
+
         public void WriteBytesAbsolute(byte[] data, ulong offset) => Write(data, offset, Absolute);
 
         private byte[] Read(ulong offset, int length, SwitchOffsetType type)

@@ -50,7 +50,6 @@ namespace SysBot.Pokemon.Discord
             }
         }
 
-
         private static string GetDetailedSummary(PokeRoutineExecutorBase z)
         {
             return $"- {z.Connection.Name} | {z.Connection.Label} - {z.Config.CurrentRoutineType} ~ {z.LastTime:hh:mm:ss} | {z.LastLogged}";
@@ -143,6 +142,5 @@ namespace SysBot.Pokemon.Discord
             bot.Start();
             await ReplyAsync($"Bot has been restarted.").ConfigureAwait(false);
         }
-
     }
 }

@@ -327,7 +327,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 await ReplyAsync("Invalid seed format. Please enter a seed consisting of exactly 8 hexadecimal digits.").ConfigureAwait(false);
                 return;
             }
-            if (level < 1 || level > 7) 
+            if (level < 1 || level > 7)
             {
                 await ReplyAsync("Invalid raid level. Please enter a level between 1 and 7.").ConfigureAwait(false);  // Adjusted message to reflect new level range
                 return;
@@ -423,7 +423,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             [Summary("Seed")] string seed,
             [Summary("Difficulty Level (1-7)")] int level,
             [Summary("Story Progress Level")] int storyProgressLevel = 6,
-            [Summary("Species Name (Optional)")] string? speciesName = null) 
+            [Summary("Species Name (Optional)")] string? speciesName = null)
         {
             var botPrefix = SysCord<T>.Runner.Config.Discord.CommandPrefix;
             if (Hub.Config.RotatingRaidSV.RaidSettings.DisableRequests)
@@ -636,12 +636,16 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             {
                 case 6: // Unlocked 6 Stars
                     return level >= 3 && level <= 7;
+
                 case 5: // Unlocked 5 Stars
                     return level >= 3 && level <= 5;
+
                 case 4: // Unlocked 4 Stars
                     return level >= 1 && level <= 4;
+
                 case 3: // Unlocked 3 Stars
                     return level >= 1 && level <= 3;
+
                 default: return false; // No 1 or 2 Star Unlocked
             }
         }

@@ -77,7 +77,6 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         public override async Task MainLoop(CancellationToken token)
         {
-
             if (Settings.RaidSettings.GenerateRaidsFromFile)
             {
                 GenerateSeedsFromFile();
@@ -449,7 +448,6 @@ namespace SysBot.Pokemon.SV.BotRaid
             Settings.ActiveRaids.RemoveAll(p => p.AddedByRACommand);
             Settings.ActiveRaids.RemoveAll(p => p.Title == "Mystery Shiny Raid");
             await CleanExit(CancellationToken.None).ConfigureAwait(false);
-
         }
 
         private async Task LocateSeedIndex(CancellationToken token)
@@ -868,7 +866,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                     Log($"Moving on to next rotation for {Settings.ActiveRaids[RotationCount].Species}.");
                     await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
                 }
-
                 else
                     await StartGame(Hub.Config, token).ConfigureAwait(false);
             }
@@ -1116,17 +1113,20 @@ namespace SysBot.Pokemon.SV.BotRaid
                     if (mysteryRaidsSettings.Unlocked3StarSettings.Allow2StarRaids) possibleDifficulties.Add(2);
                     if (mysteryRaidsSettings.Unlocked3StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
                     break;
+
                 case GameProgress.Unlocked4Stars:
                     if (mysteryRaidsSettings.Unlocked4StarSettings.Allow1StarRaids) possibleDifficulties.Add(1);
                     if (mysteryRaidsSettings.Unlocked4StarSettings.Allow2StarRaids) possibleDifficulties.Add(2);
                     if (mysteryRaidsSettings.Unlocked4StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
                     if (mysteryRaidsSettings.Unlocked4StarSettings.Allow4StarRaids) possibleDifficulties.Add(4);
                     break;
+
                 case GameProgress.Unlocked5Stars:
                     if (mysteryRaidsSettings.Unlocked5StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
                     if (mysteryRaidsSettings.Unlocked5StarSettings.Allow4StarRaids) possibleDifficulties.Add(4);
                     if (mysteryRaidsSettings.Unlocked5StarSettings.Allow5StarRaids) possibleDifficulties.Add(5);
                     break;
+
                 case GameProgress.Unlocked6Stars:
                     if (mysteryRaidsSettings.Unlocked6StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
                     if (mysteryRaidsSettings.Unlocked6StarSettings.Allow4StarRaids) possibleDifficulties.Add(4);
@@ -2018,17 +2018,15 @@ namespace SysBot.Pokemon.SV.BotRaid
                 }
                 catch (HttpRequestException ex) when (ex.InnerException is WebException webEx && webEx.Status == WebExceptionStatus.TrustFailure)
                 {
-
                 }
                 catch (Exception ex)
                 {
-
                 }
                 return false;
             }
         }
 
-        readonly Dictionary<string, string> TypeAdvantages = new Dictionary<string, string>()
+        private readonly Dictionary<string, string> TypeAdvantages = new Dictionary<string, string>()
         {
             { "normal", "Fighting" },
             { "fire", "Water, Ground, Rock" },
@@ -2687,12 +2685,15 @@ namespace SysBot.Pokemon.SV.BotRaid
                 case TeraRaidMapParent.Paldea:
                     raidData = await ReadPaldeaRaids(token);
                     break;
+
                 case TeraRaidMapParent.Kitakami:
                     raidData = await ReadKitakamiRaids(token);
                     break;
+
                 case TeraRaidMapParent.Blueberry:
                     raidData = await ReadBlueberryRaids(token);
                     break;
+
                 default:
                     throw new InvalidOperationException("Invalid region");
             }
@@ -3423,7 +3424,6 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task<bool> SaveGame(PokeRaidHubConfig config, CancellationToken token)
         {
-
             await Click(X, 3_000, token).ConfigureAwait(false);
             await Click(R, 3_000 + config.Timings.ExtraTimeConnectOnline, token).ConfigureAwait(false);
             await Click(A, 3_000, token).ConfigureAwait(false);

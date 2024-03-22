@@ -11,6 +11,7 @@ namespace SysBot.Pokemon
         public ulong ID { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Comment { get; set; } = string.Empty;
+
         public override string ToString() => $"{Name} = {ID} // {Comment}";
     }
 

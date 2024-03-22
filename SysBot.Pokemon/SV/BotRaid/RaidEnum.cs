@@ -88,6 +88,7 @@ namespace SysBot.Pokemon
     {
         [Description("1500 milliseconds")]
         _1500 = 1500, // Team SS
+
         [Description("9000 milliseconds")]
         _9000 = 9000 // Everything SS
     }

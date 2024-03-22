@@ -1,8 +1,7 @@
-﻿using System;
+﻿using SysBot.Pokemon.SV.BotRaid.Helpers; // Add this to reference the NotRaidBot class
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
-using System.Windows.Forms;
-using SysBot.Pokemon.SV.BotRaid.Helpers; // Add this to reference the NotRaidBot class
 
 public class UpdateChecker
 {
@@ -65,4 +64,3 @@ public class UpdateChecker
         }
     }
 }
-

@@ -16,11 +16,15 @@ namespace SysBot.Base
         }
 
         public byte[] ReadBytes(uint offset, int length) => Read(offset, length, Heap.GetReadMethod(false));
+
         public byte[] ReadBytesMain(ulong offset, int length) => Read(offset, length, Main.GetReadMethod(false));
+
         public byte[] ReadBytesAbsolute(ulong offset, int length) => Read(offset, length, Absolute.GetReadMethod(false));
 
         public void WriteBytes(byte[] data, uint offset) => Write(data, offset, Heap.GetWriteMethod(false));
+
         public void WriteBytesMain(byte[] data, ulong offset) => Write(data, offset, Main.GetWriteMethod(false));
+
         public void WriteBytesAbsolute(byte[] data, ulong offset) => Write(data, offset, Absolute.GetWriteMethod(false));
 
         public ulong GetMainNsoBase()

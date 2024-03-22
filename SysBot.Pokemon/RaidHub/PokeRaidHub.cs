@@ -10,6 +10,7 @@ namespace SysBot.Pokemon
     public class PokeRaidHub<T> where T : PKM, new()
     {
         public RotatingRaidSettingsSV RotatingRaidSV { get; set; }
+
         public PokeRaidHub(PokeRaidHubConfig config)
         {
             Config = config;
@@ -19,6 +20,7 @@ namespace SysBot.Pokemon
 
         /// <summary> Raid Bots only, used to delegate multi-player tasks </summary>
         public readonly ConcurrentPool<PokeRoutineExecutorBase> Bots = new();
+
         public bool RaidBotsReady => !Bots.All(z => z.Config.CurrentRoutineType == PokeRoutineType.Idle);
     }
 }

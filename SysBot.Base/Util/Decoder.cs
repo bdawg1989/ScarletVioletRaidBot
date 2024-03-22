@@ -8,7 +8,9 @@ namespace SysBot.Base
     public static class Decoder
     {
         private static bool IsNum(char c) => (uint)(c - '0') <= 9;
+
         private static bool IsHexUpper(char c) => (uint)(c - 'A') <= 5;
+
         private static bool IsHexLower(char c) => (uint)(c - 'a') <= 5;
 
         public static byte[] ConvertHexByteStringToBytes(byte[] bytes)
@@ -23,6 +25,7 @@ namespace SysBot.Base
             }
             return dest;
         }
+
         public static void LoadHexBytesTo(ReadOnlySpan<byte> str, Span<byte> dest, int tupleSize)
         {
             // The input string is 2-char hex values optionally separated.
@@ -31,6 +34,7 @@ namespace SysBot.Base
             for (int i = 0, j = 0; i < str.Length; i += tupleSize)
                 dest[j++] = DecodeTuple((char)str[i + 0], (char)str[i + 1]);
         }
+
         private static byte DecodeTuple(char _0, char _1)
         {
             byte result;

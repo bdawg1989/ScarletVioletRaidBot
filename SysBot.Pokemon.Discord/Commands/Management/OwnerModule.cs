@@ -15,7 +15,6 @@ namespace SysBot.Pokemon.Discord
         [Command("addSudo")]
         [Summary("Adds mentioned user to global sudo")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task SudoUsers([Remainder] string _)
         {
             var users = Context.Message.MentionedUsers;
@@ -27,7 +26,6 @@ namespace SysBot.Pokemon.Discord
         [Command("removeSudo")]
         [Summary("Removes mentioned user from global sudo")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task RemoveSudoUsers([Remainder] string _)
         {
             var users = Context.Message.MentionedUsers;
@@ -39,7 +37,6 @@ namespace SysBot.Pokemon.Discord
         [Command("addChannel")]
         [Summary("Adds a channel to the list of channels that are accepting commands.")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task AddChannel()
         {
             var obj = GetReference(Context.Message.Channel);
@@ -50,7 +47,6 @@ namespace SysBot.Pokemon.Discord
         [Command("removeChannel")]
         [Summary("Removes a channel from the list of channels that are accepting commands.")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task RemoveChannel()
         {
             var obj = GetReference(Context.Message.Channel);
@@ -62,7 +58,6 @@ namespace SysBot.Pokemon.Discord
         [Alias("bye")]
         [Summary("Leaves the current server.")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task Leave()
         {
             await ReplyAsync("Goodbye.").ConfigureAwait(false);
@@ -73,7 +68,6 @@ namespace SysBot.Pokemon.Discord
         [Alias("lg")]
         [Summary("Leaves guild based on supplied ID.")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task LeaveGuild(string userInput)
         {
             if (!ulong.TryParse(userInput, out ulong id))
@@ -95,7 +89,6 @@ namespace SysBot.Pokemon.Discord
         [Command("leaveall")]
         [Summary("Leaves all servers the bot is currently in.")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task LeaveAll()
         {
             await ReplyAsync("Leaving all servers.").ConfigureAwait(false);
@@ -125,7 +118,6 @@ namespace SysBot.Pokemon.Discord
         [Alias("kill", "shutdown")]
         [Summary("Causes the entire process to end itself!")]
         [RequireOwner]
-        // ReSharper disable once UnusedParameter.Global
         public async Task ExitProgram()
         {
             await Context.Channel.EchoAndReply("Shutting down... goodbye! **Bot services are going offline.**").ConfigureAwait(false);

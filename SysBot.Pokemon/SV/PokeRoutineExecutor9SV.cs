@@ -4,7 +4,6 @@ using SysBot.Base;
 using SysBot.Pokemon.SV.BotRaid;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Threading;
@@ -24,6 +23,7 @@ namespace SysBot.Pokemon
         private ulong KeyBlockAddress = 0;
 
         public ulong BaseBlockKeyPointer;
+
         protected PokeRoutineExecutor9SV(PokeBotState cfg) : base(cfg)
         {
         }
@@ -317,7 +317,6 @@ namespace SysBot.Pokemon
                 deliveryLotteryRewardFlatbuffer
             );
         }
-
 
         public static (PK9, uint) IsSeedReturned(ITeraRaid enc, Raid raid)
         {

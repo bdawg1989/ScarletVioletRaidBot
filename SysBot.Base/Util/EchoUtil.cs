@@ -38,7 +38,6 @@ namespace SysBot.Base
                         ping = string.Empty;
                         if (string.IsNullOrEmpty(markurl))
                             markurl = $"https://i.imgur.com/t2M8qF4.png";
-
                         else
                             markurl = $"https://i.imgur.com/t2M8qF4.png";
                     }

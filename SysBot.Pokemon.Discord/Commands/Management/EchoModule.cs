@@ -33,8 +33,8 @@ namespace SysBot.Pokemon.Discord
 
     public class EchoModule : ModuleBase<SocketCommandContext>
     {
-
         private static DiscordSettings Settings { get; set; }
+
         private class EchoChannel
         {
             public readonly ulong ChannelID;
@@ -175,23 +175,29 @@ namespace SysBot.Pokemon.Discord
             {
                 case ThumbnailOption.Gengar:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png";
+
                 case ThumbnailOption.Pikachu:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/pikachumegaphone.png";
+
                 case ThumbnailOption.Umbreon:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/umbreonmegaphone.png";
+
                 case ThumbnailOption.Sylveon:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/sylveonmegaphone.png";
+
                 case ThumbnailOption.Charmander:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/charmandermegaphone.png";
+
                 case ThumbnailOption.Jigglypuff:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/jigglypuffmegaphone.png";
+
                 case ThumbnailOption.Flareon:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/flareonmegaphone.png";
+
                 default:
                     return "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/gengarmegaphone.png";
             }
         }
-
 
         [Command("addEmbedChannel")]
         [Alias("aec")]
@@ -261,7 +267,6 @@ namespace SysBot.Pokemon.Discord
             }
             return false; // Reached max number of retries without success.
         }
-
 
         private static void AddEchoChannel(ISocketMessageChannel c, ulong cid)
         {
@@ -339,6 +344,5 @@ namespace SysBot.Pokemon.Discord
             Name = channel.Name,
             Comment = $"Added by {Context.User.Username} on {DateTime.Now:yyyy.MM.dd-hh:mm:ss}",
         };
-
     }
 }

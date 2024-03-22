@@ -11,14 +11,19 @@ namespace SysBot.Pokemon
         bool IsRunning { get; }
 
         void StartAll();
+
         void StopAll();
+
         void InitializeStart();
 
         void Add(PokeRoutineExecutorBase newbot);
+
         void Remove(IConsoleBotConfig state, bool callStop);
 
         BotSource<PokeBotState>? GetBot(PokeBotState state);
+
         PokeRoutineExecutorBase CreateBotFromConfig(PokeBotState cfg);
+
         bool SupportsRoutine(PokeRoutineType pokeRoutineType);
     }
 
@@ -41,7 +46,8 @@ namespace SysBot.Pokemon
             Hub = new PokeRaidHub<T>(config);
         }
 
-        protected virtual void AddIntegrations() { }
+        protected virtual void AddIntegrations()
+        { }
 
         public override void Add(RoutineExecutor<PokeBotState> bot)
         {
@@ -99,9 +105,13 @@ namespace SysBot.Pokemon
         }
 
         public PokeRoutineExecutorBase CreateBotFromConfig(PokeBotState cfg) => Factory.CreateBot(Hub, cfg);
+
         public BotSource<PokeBotState>? GetBot(PokeBotState state) => base.GetBot(state);
+
         void IPokeBotRunner.Remove(IConsoleBotConfig state, bool callStop) => Remove(state, callStop);
+
         public void Add(PokeRoutineExecutorBase newbot) => Add((RoutineExecutor<PokeBotState>)newbot);
+
         public bool SupportsRoutine(PokeRoutineType t) => Factory.SupportsRoutine(t);
     }
 }

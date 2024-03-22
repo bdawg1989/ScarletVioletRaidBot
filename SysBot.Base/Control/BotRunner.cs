@@ -61,6 +61,7 @@ namespace SysBot.Base
         }
 
         public BotSource<T>? GetBot(IConsoleBotConfig config) => Bots.Find(z => z.Bot.Config.Equals(config));
+
         public BotSource<T>? GetBot(string ip) => Bots.Find(z => z.Bot.Config.Matches(ip));
     }
 }

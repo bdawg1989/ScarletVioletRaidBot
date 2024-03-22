@@ -46,8 +46,11 @@ namespace SysBot.Base
         }
 
         public abstract Task MainLoop(CancellationToken token);
+
         public abstract Task InitialStartup(CancellationToken token);
+
         public abstract void SoftStop();
+
         public abstract Task HardStop();
     }
 }

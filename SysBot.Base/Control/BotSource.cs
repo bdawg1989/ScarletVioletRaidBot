@@ -15,10 +15,13 @@ namespace SysBot.Base
         public bool IsPaused { get; private set; }
 
         private bool IsStopping { get; set; }
+
         // Retry connection if bot crashes
         private int retryCount = 0;
+
         private DateTime firstFailureTime;
         private bool isFirstFailure = true;
+
         public void Stop()
         {
             if (!IsRunning || IsStopping)
@@ -111,8 +114,6 @@ namespace SysBot.Base
                 LogUtil.LogError("Maximum number of retry attempts reached. Not restarting.", Bot.Connection.Name);
             }
         }
-
-
 
         public void Resume()
         {

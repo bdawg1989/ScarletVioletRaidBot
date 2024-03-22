@@ -32,7 +32,6 @@ namespace SysBot.Pokemon
                 (int)Species.Sinistea or (int)Species.Polteageist or (int)Species.Rockruff or (int)Species.Mothim => 0,
                 (int)Species.Alcremie when pkm.IsShiny || canGmax => 0,
                 _ => pkm.Form,
-
             };
 
             if (pkm.Species is (ushort)Species.Sneasel)

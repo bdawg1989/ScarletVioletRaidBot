@@ -10,6 +10,7 @@ namespace SysBot.Pokemon
         private const string Channels = nameof(Channels);
         private const string Roles = nameof(Roles);
         private const string Users = nameof(Users);
+
         public override string ToString() => "Discord Integration Settings";
 
         // Startup
@@ -40,7 +41,6 @@ namespace SysBot.Pokemon
         [Category(Roles), Description("Users with this role are allowed to bypass command restrictions.")]
         public RemoteControlAccessList RoleSudo { get; set; } = new() { AllowIfEmpty = false };
 
-
         // Operation
         [Category(Users), Description("Users with these user IDs cannot use the bot.")]
         public RemoteControlAccessList UserBlacklist { get; set; } = new();
@@ -66,18 +66,20 @@ namespace SysBot.Pokemon
         public class AnnouncementSettingsCategory
         {
             public override string ToString() => "Announcement Settings";
+
             [Category("Embed Settings"), Description("Thumbnail option for announcements.")]
             public ThumbnailOption AnnouncementThumbnailOption { get; set; } = ThumbnailOption.Gengar;
 
             [Category("Embed Settings"), Description("Custom thumbnail URL for announcements.")]
             public string CustomAnnouncementThumbnailUrl { get; set; } = string.Empty;
+
             public EmbedColorOption AnnouncementEmbedColor { get; set; } = EmbedColorOption.Blue;
+
             [Category("Embed Settings"), Description("Enable random thumbnail selection for announcements.")]
             public bool RandomAnnouncementThumbnail { get; set; } = false;
 
             [Category("Embed Settings"), Description("Enable random color selection for announcements.")]
             public bool RandomAnnouncementColor { get; set; } = false;
         }
-
     }
 }

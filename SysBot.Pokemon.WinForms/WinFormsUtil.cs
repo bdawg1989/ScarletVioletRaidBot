@@ -6,6 +6,7 @@ namespace SysBot.Pokemon.WinForms
     public static class WinFormsUtil
     {
         #region Message Displays
+
         /// <summary>
         /// Displays a dialog showing the details of an error.
         /// </summary>
@@ -34,7 +35,8 @@ namespace SysBot.Pokemon.WinForms
             string msg = string.Join(Environment.NewLine + Environment.NewLine, lines);
             return MessageBox.Show(msg, "Prompt", btn, MessageBoxIcon.Question);
         }
-        #endregion
+
+        #endregion Message Displays
 
         /// <summary>
         /// Gets the selected value of the input <see cref="cb"/>. If no value is selected, will return 0.

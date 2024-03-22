@@ -11,8 +11,11 @@ namespace SysBot.Base
         Task<int> SendAsync(byte[] buffer, CancellationToken token);
 
         Task<byte[]> ReadBytesAsync(uint offset, int length, CancellationToken token);
+
         Task WriteBytesAsync(byte[] data, uint offset, CancellationToken token);
+
         Task<byte[]> PixelPeek(CancellationToken token);
+
         Task<long> GetUnixTime(CancellationToken token);
     }
 }

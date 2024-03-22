@@ -8,8 +8,11 @@ namespace SysBot.Base
     {
         string LastLogged { get; }
         DateTime LastTime { get; }
+
         void ReportStatus();
+
         void Log(string message);
+
         string GetSummary();
 
         /// <summary>
@@ -19,7 +22,9 @@ namespace SysBot.Base
         Task RunAsync(CancellationToken token);
 
         Task MainLoop(CancellationToken token);
+
         Task InitialStartup(CancellationToken token);
+
         void SoftStop();
     }
 }

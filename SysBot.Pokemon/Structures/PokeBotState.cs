@@ -11,10 +11,13 @@ namespace SysBot.Pokemon
     {
         /// <inheritdoc/>
         public override void IterateNextRoutine() => CurrentRoutineType = NextRoutineType;
+
         /// <inheritdoc/>
         public override void Initialize() => Resume();
+
         /// <inheritdoc/>
         public override void Pause() => NextRoutineType = PokeRoutineType.Idle;
+
         /// <inheritdoc/>
         public override void Resume() => NextRoutineType = InitialRoutine;
     }

@@ -49,8 +49,10 @@ namespace SysBot.Base
 
         /// <summary> Routine to start up with. </summary>
         public TEnum InitialRoutine { get; set; }
+
         /// <summary> Current routine being performed. </summary>
         public TEnum CurrentRoutineType { get; protected set; }
+
         /// <summary> Next routine to perform. </summary>
         public TEnum NextRoutineType { get; protected set; }
 

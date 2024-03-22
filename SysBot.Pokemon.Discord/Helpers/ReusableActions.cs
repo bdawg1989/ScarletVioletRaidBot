@@ -13,6 +13,7 @@ namespace SysBot.Pokemon.Discord
             if (!EchoModule.IsEchoChannel(channel) || !EchoModule.IsEmbedEchoChannel(channel))
                 await channel.SendMessageAsync(msg).ConfigureAwait(false);
         }
+
         public static string StripCodeBlock(string str) => str.Replace("`\n", "").Replace("\n`", "").Replace("`", "").Trim();
     }
 }

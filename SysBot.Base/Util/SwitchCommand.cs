@@ -30,7 +30,7 @@ namespace SysBot.Base
         /// <returns>Encoded command bytes</returns>
         public static byte[] Configure(SwitchConfigureParameter p, int ms, bool crlf = true) => Encode($"configure {p} {ms}", crlf);
 
-        /* 
+        /*
          *
          * Controller Button Commands
          *
@@ -61,7 +61,7 @@ namespace SysBot.Base
         /// <returns>Encoded command bytes</returns>
         public static byte[] Release(SwitchButton button, bool crlf = true) => Encode($"release {button}", crlf);
 
-        /* 
+        /*
          *
          * Controller Stick Commands
          *
@@ -85,7 +85,7 @@ namespace SysBot.Base
         /// <returns>Encoded command bytes</returns>
         public static byte[] ResetStick(SwitchStick stick, bool crlf = true) => SetStick(stick, 0, 0, crlf);
 
-        /* 
+        /*
          *
          * Hid Commands
          *
@@ -107,7 +107,7 @@ namespace SysBot.Base
         /// <returns>Encoded command bytes</returns>
         public static byte[] TypeMultipleKeys(IEnumerable<HidKeyboardKey> keys, bool crlf = true) => Encode($"key{string.Concat(keys.Select(z => $" {(int)z}"))}", crlf);
 
-        /* 
+        /*
          *
          * Memory I/O Commands
          *
@@ -192,9 +192,9 @@ namespace SysBot.Base
         public static byte[] PokeMain(ulong offset, byte[] data, bool crlf = true) => Encode($"pokeMain 0x{offset:X16} 0x{string.Concat(data.Select(z => $"{z:X2}"))}", crlf);
 
         /*
-         * 
+         *
          * Pointer Commands
-         * 
+         *
          */
 
         /// <summary>
@@ -231,7 +231,7 @@ namespace SysBot.Base
         /// <returns>Encoded command bytes</returns>
         public static byte[] PointerRelative(IEnumerable<long> jumps, bool crlf = true) => Encode($"pointerRelative{string.Concat(jumps.Select(z => $" {z}"))}", crlf);
 
-        /* 
+        /*
          *
          * Process Info Commands
          *

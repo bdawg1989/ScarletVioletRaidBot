@@ -10,8 +10,13 @@ namespace SysBot.Pokemon
     /// </summary>
     public class PokeBotRunnerImpl<T> : PokeBotRunner<T> where T : PKM, new()
     {
-        public PokeBotRunnerImpl(PokeRaidHub<T> hub, BotFactory<T> fac) : base(hub, fac) { }
-        public PokeBotRunnerImpl(PokeRaidHubConfig config, BotFactory<T> fac) : base(config, fac) { }
+        public PokeBotRunnerImpl(PokeRaidHub<T> hub, BotFactory<T> fac) : base(hub, fac)
+        {
+        }
+
+        public PokeBotRunnerImpl(PokeRaidHubConfig config, BotFactory<T> fac) : base(config, fac)
+        {
+        }
 
         protected override void AddIntegrations()
         {

@@ -8,7 +8,6 @@ using System.Threading;
 
 namespace SysBot.Pokemon
 {
-
     public class RotatingRaidSettingsSV : IBotStateSettings
     {
         private const string Hosting = nameof(Hosting);
@@ -34,6 +33,7 @@ namespace SysBot.Pokemon
         public RemoteControlAccessList RaiderBanList { get; set; } = new() { AllowIfEmpty = false };
 
         public MiscSettingsCategory MiscSettings { get; set; } = new MiscSettingsCategory();
+
         [Browsable(false)]
         public bool ScreenOff
         {
@@ -44,12 +44,15 @@ namespace SysBot.Pokemon
         public class RotatingRaidParameters
         {
             public override string ToString() => $"{Title}";
+
             public bool ActiveInRotation { get; set; } = true;
             public int DifficultyLevel { get; set; } = 0;
             public int StoryProgressLevel { get; set; } = 5;
             public TeraCrystalType CrystalType { get; set; } = TeraCrystalType.Base;
+
             [Browsable(false)]
             public string[] Description { get; set; } = Array.Empty<string>();
+
             public bool IsCoded { get; set; } = true;
             public bool IsShiny { get; set; } = true;
             public bool ForceSpecificSpecies { get; set; } = false;
@@ -62,14 +65,19 @@ namespace SysBot.Pokemon
             public int Action1Delay { get; set; } = 5;
             public int GroupID { get; set; } = 0;
             public string Title { get; set; } = string.Empty;
+
             [Browsable(false)]
             public bool AddedByRACommand { get; set; } = false;
+
             [Browsable(false)]
             public bool RaidUpNext { get; set; } = false;
+
             [Browsable(false)]
             public string RequestCommand { get; set; } = string.Empty;
+
             [Browsable(false)]
             public ulong RequestedByUserID { get; set; }
+
             [Browsable(false)]
             [System.Text.Json.Serialization.JsonIgnore]
             public SocketUser? User { get; set; }
@@ -82,7 +90,6 @@ namespace SysBot.Pokemon
 
             [Category(Hosting), Description("Set to \"true\" when events are active to properly process level 7 (event) and level 5 (distribution) raids.")]
             public bool EventActive { get; set; } = false;
-
         }
 
         [Category(Hosting), TypeConverter(typeof(CategoryConverter<RotatingRaidSettingsCategory>))]
@@ -207,10 +214,13 @@ namespace SysBot.Pokemon
         {
             [TypeConverter(typeof(ExpandableObjectConverter))]
             public Unlocked3StarSettings Unlocked3StarSettings { get; set; } = new Unlocked3StarSettings();
+
             [TypeConverter(typeof(ExpandableObjectConverter))]
             public Unlocked4StarSettings Unlocked4StarSettings { get; set; } = new Unlocked4StarSettings();
+
             [TypeConverter(typeof(ExpandableObjectConverter))]
             public Unlocked5StarSettings Unlocked5StarSettings { get; set; } = new Unlocked5StarSettings();
+
             [TypeConverter(typeof(ExpandableObjectConverter))]
             public Unlocked6StarSettings Unlocked6StarSettings { get; set; } = new Unlocked6StarSettings();
 
@@ -220,6 +230,7 @@ namespace SysBot.Pokemon
         public class Unlocked3StarSettings
         {
             public bool Enabled { get; set; } = true;
+
             [Category("DifficultyLevels"), Description("Allow 1* Raids in 3* Unlocked Raids.")]
             public bool Allow1StarRaids { get; set; } = true;
 
@@ -235,6 +246,7 @@ namespace SysBot.Pokemon
         public class Unlocked4StarSettings
         {
             public bool Enabled { get; set; } = true;
+
             [Category("DifficultyLevels"), Description("Allow 1* Raids in 4* Unlocked Raids.")]
             public bool Allow1StarRaids { get; set; } = true;
 
@@ -254,6 +266,7 @@ namespace SysBot.Pokemon
         public class Unlocked5StarSettings
         {
             public bool Enabled { get; set; } = true;
+
             [Category("DifficultyLevels"), Description("Allow 3* Raids in 5* Unlocked Raids.")]
             public bool Allow3StarRaids { get; set; } = true;
 
@@ -270,6 +283,7 @@ namespace SysBot.Pokemon
         public class Unlocked6StarSettings
         {
             public bool Enabled { get; set; } = true;
+
             [Category("DifficultyLevels"), Description("Allow 3* Raids in 6* Unlocked Raids.")]
             public bool Allow3StarRaids { get; set; } = true;
 

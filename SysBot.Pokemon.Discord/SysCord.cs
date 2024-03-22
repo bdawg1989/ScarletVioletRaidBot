@@ -10,7 +10,6 @@ using System.Linq;
 using System.Reflection;
 using System.Threading;
 using System.Threading.Tasks;
-using static Discord.GatewayIntents;
 
 namespace SysBot.Pokemon.Discord
 {
@@ -35,6 +34,7 @@ namespace SysBot.Pokemon.Discord
         // Keep the CommandService and DI container around for use with commands.
         // These two types require you install the Discord.Net.Commands package.
         private readonly CommandService _commands;
+
         private readonly IServiceProvider _services;
 
         // Track loading of Echo/Logging channels so they aren't loaded multiple times.
@@ -215,7 +215,7 @@ namespace SysBot.Pokemon.Discord
                 return true;
             }
 
-            // Execute the command. (result does not indicate a return value, 
+            // Execute the command. (result does not indicate a return value,
             // rather an object stating if the command executed successfully).
             var guild = msg.Channel is SocketGuildChannel g ? g.Guild.Name : "Unknown Guild";
             await Log(new LogMessage(LogSeverity.Info, "Command", $"Executing command from {guild}#{msg.Channel.Name}:@{msg.Author.Username}. Content: {msg}")).ConfigureAwait(false);

@@ -1,15 +1,15 @@
-﻿using System;
-using System.Windows.Forms;
+﻿using SysBot.Pokemon.WinForms;
+using System;
 using System.Diagnostics;
-using SysBot.Pokemon.WinForms;
 using System.Drawing;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 public class UpdateForm : Form
 {
     private Button buttonDownload;
     private Label labelUpdateInfo;
-    Label labelChangelogTitle = new Label();
+    private Label labelChangelogTitle = new Label();
     private TextBox textBoxChangelog;
     private bool isUpdateRequired;
 
@@ -86,6 +86,7 @@ public class UpdateForm : Form
         string changelog = await updateChecker.FetchChangelogAsync();
         textBoxChangelog.Text = changelog;
     }
+
     private void ButtonDownload_Click(object sender, EventArgs e)
     {
         StartDownloadProcess();
@@ -121,4 +122,3 @@ public class UpdateForm : Form
         });
     }
 }
-

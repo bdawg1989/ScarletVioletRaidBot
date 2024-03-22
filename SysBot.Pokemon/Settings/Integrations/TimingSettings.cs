@@ -10,6 +10,7 @@ namespace SysBot.Pokemon
         private const string RestartGame = nameof(RestartGame);
         private const string Raid = nameof(Raid);
         private const string Misc = nameof(Misc);
+
         public override string ToString() => "Extra Time Settings";
 
         [Category(OpenGame), Description("Extra time in milliseconds to wait for the overworld to load after the title screen.")]

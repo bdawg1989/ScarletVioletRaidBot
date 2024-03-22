@@ -7,6 +7,7 @@ namespace SysBot.Base
     public static class ResultsUtil
     {
         public static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
+
         public static void LogText(string message) => Logger.Log(LogLevel.Info, message);
 
         // hook in here if you want to forward the message elsewhere???

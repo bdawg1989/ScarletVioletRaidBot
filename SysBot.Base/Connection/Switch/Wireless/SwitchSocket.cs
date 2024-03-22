@@ -30,12 +30,17 @@ namespace SysBot.Base
         }
 
         public void Log(string message) => LogInfo(message);
+
         public void LogInfo(string message) => LogUtil.LogInfo(message, Label);
+
         public void LogError(string message) => LogUtil.LogError(message, Label);
 
         public abstract void Connect();
+
         public abstract void Reset();
+
         public abstract void Disconnect();
+
         public void InitializeSocket() => Connection = new Socket(Type, Protocol);
     }
 }

@@ -60,8 +60,11 @@ public class EncounterRaid9 : IEncounterable, IEncounterConvertible<PK9>, ITeraR
     }
 
     PKM IEncounterConvertible.ConvertToPKM(ITrainerInfo tr, EncounterCriteria criteria) => ConvertToPKM(tr, criteria);
+
     PKM IEncounterConvertible.ConvertToPKM(ITrainerInfo tr) => ConvertToPKM(tr);
+
     public PK9 ConvertToPKM(ITrainerInfo tr) => ConvertToPKM(tr, EncounterCriteria.Unrestricted);
+
     public PK9 ConvertToPKM(ITrainerInfo tr, EncounterCriteria criteria) => ((dynamic)Encounter).ConvertToPKM(tr, criteria);
 
     public ushort GetRandRateTotalScarlet(int stage)

@@ -47,12 +47,12 @@ namespace SysBot.Pokemon.ConsoleApp
             Console.WriteLine("Press any key to exit.");
             Console.ReadKey();
         }
-
     }
 
     [JsonSerializable(typeof(ProgramConfig))]
     [JsonSourceGenerationOptions(WriteIndented = true, DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull)]
-    public sealed partial class ProgramConfigContext : JsonSerializerContext { }
+    public sealed partial class ProgramConfigContext : JsonSerializerContext
+    { }
 
     public static class BotContainer
     {
