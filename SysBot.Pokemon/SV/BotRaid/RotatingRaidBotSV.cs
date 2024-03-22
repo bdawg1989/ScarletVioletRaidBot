@@ -5,7 +5,6 @@ using RaidCrawler.Core.Structures;
 using SysBot.Base;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Metrics;
 using System.Globalization;
 using System.IO;
 using System.Linq;
@@ -51,7 +50,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private int EventProgress;
         private int EmptyRaid = 0;
         private int LostRaid = 0;
-        private int FieldID = 0;
+        private readonly int FieldID = 0;
         private bool firstRun = true;
         public static int RotationCount { get; set; }
         private ulong TodaySeed;
@@ -71,10 +70,10 @@ namespace SysBot.Pokemon.SV.BotRaid
         public static bool IsBlueberry = false;
         private DateTime TimeForRollBackCheck = DateTime.Now;
         private string denHexSeed;
-        private bool indicesInitialized = false;
-        private static int KitakamiDensCount = 0;
-        private static int BlueberryDensCount = 0;
-        private int InvalidDeliveryGroupCount = 0;
+        private readonly bool indicesInitialized = false;
+        private static readonly int KitakamiDensCount = 0;
+        private static readonly int BlueberryDensCount = 0;
+        private readonly int InvalidDeliveryGroupCount = 0;
 
         public override async Task MainLoop(CancellationToken token)
         {
@@ -2029,7 +2028,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
         }
 
-        Dictionary<string, string> TypeAdvantages = new Dictionary<string, string>()
+        readonly Dictionary<string, string> TypeAdvantages = new Dictionary<string, string>()
         {
             { "normal", "Fighting" },
             { "fire", "Water, Ground, Rock" },
@@ -3121,6 +3120,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                     if (isDistributionRaid || isMightRaid)
                     {
                         string speciesName = SpeciesName.GetSpeciesName(encounter1.Species, 2);
+                        string speciesKey = string.Join("", speciesName.Split(' '));
                         int groupID = -1;
 
                         if (isDistributionRaid)
@@ -3138,18 +3138,17 @@ namespace SysBot.Pokemon.SV.BotRaid
                             {
                                 groupID = mightRaid.DeliveryGroupID;
                             }
-                        } 
+                        }
 
                         if (groupID != -1)
                         {
-                            //Log($"Species: {speciesName}, GroupID: {groupID}, Index: {i}, Type: {(isDistributionRaid ? "Distribution" : "Might")}, DenIdentifier: {denIdentifier}");
-                            if (!SpeciesToGroupIDMap.ContainsKey(speciesName))
+                            if (!SpeciesToGroupIDMap.ContainsKey(speciesKey))
                             {
-                                SpeciesToGroupIDMap[speciesName] = new List<(int GroupID, int Index, string DenIdentifier)> { (groupID, i, denIdentifier) };
+                                SpeciesToGroupIDMap[speciesKey] = new List<(int GroupID, int Index, string DenIdentifier)> { (groupID, i, denIdentifier) };
                             }
                             else
                             {
-                                SpeciesToGroupIDMap[speciesName].Add((groupID, i, denIdentifier));
+                                SpeciesToGroupIDMap[speciesKey].Add((groupID, i, denIdentifier));
                             }
                         }
                     }
