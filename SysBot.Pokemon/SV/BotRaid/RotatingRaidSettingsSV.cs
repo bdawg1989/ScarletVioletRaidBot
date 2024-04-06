@@ -158,6 +158,13 @@ namespace SysBot.Pokemon
             {
                 MoveType = moveType;
             }
+            public override string ToString()
+            {
+                if (string.IsNullOrEmpty(EmojiCode))
+                    return MoveType.ToString();
+
+                return $"{EmojiCode}";
+            }
         }
 
         [TypeConverter(typeof(ExpandableObjectConverter))]
