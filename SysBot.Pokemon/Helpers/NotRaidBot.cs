@@ -2,7 +2,7 @@
 {
     public static class NotRaidBot
     {
-        public const string Version = "v7.9.1";
+        public const string Version = "v8.0";
         public const string Repo = "https://github.com/bdawg1989/NotRaidBot";
         public const string ConfigPath = "config.json";
     }
