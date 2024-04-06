@@ -23,7 +23,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
     public class RaidModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
     {
         private readonly PokeRaidHub<T> Hub = SysCord<T>.Runner.Hub;
-        private DiscordSocketClient _client => SysCord<T>.Instance.GetClient();
+        private static DiscordSocketClient _client => SysCord<T>.Instance.GetClient();
 
         [Command("raidinfo")]
         [Alias("ri", "rv")]
@@ -71,7 +71,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             var crystalType = level switch
             {
-                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : (TeraCrystalType)0,
+                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : 0,
                 6 => (TeraCrystalType)1,
                 7 => (TeraCrystalType)3,
                 _ => throw new ArgumentException("Invalid difficulty level.")
@@ -216,11 +216,9 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
         [RequireSudo]
         public async Task AddBypassLimitAsync([Remainder] string mention)
         {
-            ulong idToAdd = 0;
-            string nameToAdd = "";
-            string type = "";
-
-            if (MentionUtils.TryParseUser(mention, out idToAdd))
+            string type;
+            string nameToAdd;
+            if (MentionUtils.TryParseUser(mention, out ulong idToAdd))
             {
                 var user = Context.Guild.GetUser(idToAdd);
                 nameToAdd = user?.Username ?? "Unknown User";
@@ -239,9 +237,8 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
 
-            if (!Hub.Config.RotatingRaidSV.RaidSettings.BypassLimitRequests.ContainsKey(idToAdd))
+            if (Hub.Config.RotatingRaidSV.RaidSettings.BypassLimitRequests.TryAdd(idToAdd, nameToAdd))
             {
-                Hub.Config.RotatingRaidSV.RaidSettings.BypassLimitRequests.Add(idToAdd, nameToAdd);
 
                 await ReplyAsync($"Added {type} '{nameToAdd}' to bypass list.").ConfigureAwait(false);
             }
@@ -256,7 +253,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
         [RequireOwner]
         public async Task RePeek()
         {
-            string ip = GetBotIPFromJsonConfig(); // Fetch the IP from the config
+            string ip = RaidModule<T>.GetBotIPFromJsonConfig(); // Fetch the IP from the config
             var source = new CancellationTokenSource();
             var token = source.Token;
 
@@ -267,7 +264,8 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
 
-            byte[]? bytes = Array.Empty<byte>();
+            _ = Array.Empty<byte>();
+            byte[]? bytes;
             try
             {
                 bytes = await bot.Bot.Connection.PixelPeek(token).ConfigureAwait(false) ?? Array.Empty<byte>();
@@ -292,7 +290,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             await Context.Channel.SendFileAsync(ms, img, embed: embed.Build());
         }
 
-        private string GetBotIPFromJsonConfig()
+        private static string GetBotIPFromJsonConfig()
         {
             try
             {
@@ -340,7 +338,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             var crystalType = level switch
             {
-                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : (TeraCrystalType)0,
+                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : 0,
                 6 => (TeraCrystalType)1,
                 7 => (TeraCrystalType)3,
                 _ => throw new ArgumentException("Invalid difficulty level.")
@@ -486,7 +484,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             var crystalType = level switch
             {
-                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : (TeraCrystalType)0,
+                >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : 0,
                 6 => (TeraCrystalType)1,
                 7 => (TeraCrystalType)3,
                 _ => throw new ArgumentException("Invalid difficulty level.")
