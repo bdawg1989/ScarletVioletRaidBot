@@ -18,9 +18,9 @@
     <Configurations>Debug;Release;sysbottest</Configurations>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="Discord.Net" Version="3.13.0" />
-    <PackageReference Include="MySql.Data" Version="8.2.0" />
-    <PackageReference Include="PKHeX.Core" Version="24.1.12" />
+    <PackageReference Include="Discord.Net" Version="3.14.1" />
+    <PackageReference Include="MySql.Data" Version="8.3.0" />
+    <PackageReference Include="PKHeX.Core" Version="24.3.26" />
     <PackageReference Include="System.Management" Version="8.0.0" />
     <PackageReference Include="System.Resources.Extensions" Version="8.0.0" />
   </ItemGroup>

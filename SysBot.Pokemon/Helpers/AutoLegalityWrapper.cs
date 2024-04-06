@@ -33,18 +33,20 @@ namespace SysBot.Pokemon
 
             for (int i = 1; i < PKX.Generation + 1; i++)
             {
-                var versions = GameUtil.GetVersionsInGeneration(i, PKX.Generation);
+                var versions = GameUtil.GetVersionsInGeneration((byte)i, (GameVersion)PKX.Generation);
                 foreach (var v in versions)
                 {
-                    var fallback = new SimpleTrainerInfo(v)
+                    var gameVersion = v;
+                    var fallback = new SimpleTrainerInfo(gameVersion)
                     {
                         Language = lang,
                         TID16 = TID,
                         SID16 = SID,
                         OT = OT,
-                        Generation = i,
+                        Generation = (byte)i,
                     };
-                    var exist = TrainerSettings.GetSavedTrainerData(v, i, fallback);
+
+                    var exist = TrainerSettings.GetSavedTrainerData(gameVersion, i, fallback);
                     if (exist is SimpleTrainerInfo) // not anything from files; this assumes ALM returns SimpleTrainerInfo for non-user-provided fake templates.
                         TrainerSettings.Register(fallback);
                 }

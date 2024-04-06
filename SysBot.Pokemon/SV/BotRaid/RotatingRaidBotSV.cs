@@ -3211,7 +3211,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                         RaidEmbedInfo.RaidSpeciesForm = allEncounters[i].Form;
                         RaidEmbedInfo.RaidEmbedTitle = $"{stars} ★ {titlePrefix} {(Species)allEncounters[i].Species}{pkinfo}";
                         RaidEmbedInfo.RaidSpeciesGender = $"{(pk.Gender == 0 ? "Male" : pk.Gender == 1 ? "Female" : "Genderless")}";
-                        RaidEmbedInfo.RaidSpeciesNature = GameInfo.Strings.Natures[pk.Nature];
+                        RaidEmbedInfo.RaidSpeciesNature = GameInfo.Strings.Natures[(int)pk.Nature];
                         RaidEmbedInfo.RaidSpeciesAbility = $"{(Ability)pk.Ability}";
                         RaidEmbedInfo.RaidSpeciesIVs = $"{pk.IV_HP}/{pk.IV_ATK}/{pk.IV_DEF}/{pk.IV_SPA}/{pk.IV_SPD}/{pk.IV_SPE}";
                         RaidEmbedInfo.RaidSpeciesTeraType = $"{(MoveType)allRaids[i].GetTeraType(encounter)}";

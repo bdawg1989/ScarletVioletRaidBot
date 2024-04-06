@@ -27,13 +27,13 @@ public class EncounterRaid9 : IEncounterable, IEncounterConvertible<PK9>, ITeraR
     public string Name => ((dynamic)Encounter).Name;
     public string LongName => ((dynamic)Encounter).LongName;
     public EntityContext Context => ((dynamic)Encounter).Context;
-    public bool EggEncounter => ((dynamic)Encounter).EggEncounter;
-    public int Generation => ((dynamic)Encounter).Generation;
+    public bool IsEgg => ((dynamic)Encounter).IsEgg;
+    public byte Generation => ((dynamic)Encounter).Generation;
     public bool IsShiny => ((dynamic)Encounter).IsShiny;
     public byte LevelMin => ((dynamic)Encounter).LevelMin;
     public byte LevelMax => ((dynamic)Encounter).LevelMax;
-    public int Location => ((dynamic)Encounter).Location;
-    public int EggLocation => ((dynamic)Encounter).EggLocation;
+    public ushort Location => ((dynamic)Encounter).Location;
+    public ushort EggLocation => ((dynamic)Encounter).EggLocation;
     public Ball FixedBall => ((dynamic)Encounter).FixedBall;
 
     public uint Identifier => GetIdentifier();
