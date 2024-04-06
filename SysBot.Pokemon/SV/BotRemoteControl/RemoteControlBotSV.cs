@@ -1,4 +1,5 @@
 ﻿using SysBot.Base;
+using SysBot.Pokemon.SV;
 using System;
 using System.Threading;
 using System.Threading.Tasks;
