@@ -57,6 +57,14 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             bool isEvent = !string.IsNullOrEmpty(speciesName);
 
+            var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
+
+            if (isEvent && selectedMap != TeraRaidMapParent.Paldea)
+            {
+                await ReplyAsync("Events can only be run in the Paldea map.");
+                return;
+            }
+
             int raidDeliveryGroupID = -1;
             if (!string.IsNullOrEmpty(speciesName) && SpeciesToGroupIDMap.TryGetValue(speciesName, out var groupIDAndIndices))
             {
@@ -85,9 +93,8 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             try
             {
-                var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
                 var rewardsToShow = settings.EmbedToggles.RewardsToShow;
-                var (_, embed) = RaidInfoCommand(seedValue, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, 0, isEvent);
+                var (_, embed) = RaidInfoCommand(seedValue, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, settings.EmbedToggles.MoveTypeEmojis, settings.EmbedToggles.CustomTypeEmojis, 0, isEvent);
 
                 var instructionMessage = await ReplyAsync("React with ✅ to add the raid to the queue.");
                 var message = await ReplyAsync(embed: embed);
@@ -365,7 +372,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
             var rewardsToShow = settings.EmbedToggles.RewardsToShow;
-            var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow);
+            var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, settings.EmbedToggles.MoveTypeEmojis, settings.EmbedToggles.CustomTypeEmojis);
             var description = string.Empty;
             var prevpath = "bodyparam.txt";
             var filepath = "RaidFilesSV\\bodyparam.txt";
@@ -481,7 +488,13 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             }
             var settings = Hub.Config.RotatingRaidSV;
             bool isEvent = !string.IsNullOrEmpty(speciesName);
+            var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
 
+            if (isEvent && selectedMap != TeraRaidMapParent.Paldea)
+            {
+                await ReplyAsync("Events can only be run in the Paldea map.");
+                return;
+            }
             var crystalType = level switch
             {
                 >= 1 and <= 5 => isEvent ? (TeraCrystalType)2 : 0,
@@ -514,9 +527,8 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
             int effectiveQueuePosition = 1;
-            var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
             var rewardsToShow = settings.EmbedToggles.RewardsToShow;
-            var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, effectiveQueuePosition);
+            var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, settings.EmbedToggles.MoveTypeEmojis, settings.EmbedToggles.CustomTypeEmojis, effectiveQueuePosition);
             var description = string.Empty;
             var prevpath = "bodyparam.txt";
             var filepath = "RaidFilesSV\\bodyparam.txt";

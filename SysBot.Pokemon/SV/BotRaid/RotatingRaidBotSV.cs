@@ -3108,15 +3108,14 @@ namespace SysBot.Pokemon.SV.BotRaid
                     var encounter1 = allEncounters[i];
                     bool isDistributionRaid = raid.Flags == 2;
                     bool isMightRaid = raid.Flags == 3;
-
-                    var matchingRaidInfo = raidInfoList.FirstOrDefault(r =>
+                    var (Area, LotteryGroup, Den, Seed, Flags, IsEvent) = raidInfoList.FirstOrDefault(r =>
                     r.Seed == raid.Seed &&
                     r.Flags == raid.Flags &&
                     r.Area == raid.Area &&
                     r.LotteryGroup == raid.LotteryGroup &&
                     r.Den == raid.Den);
 
-                    string denIdentifier = $"{matchingRaidInfo.Area}-{matchingRaidInfo.LotteryGroup}-{matchingRaidInfo.Den}";
+                    string denIdentifier = $"{Area}-{LotteryGroup}-{Den}";
 
                     if (isDistributionRaid || isMightRaid)
                     {
@@ -3173,6 +3172,13 @@ namespace SysBot.Pokemon.SV.BotRaid
                     }
                     if (seed == set)
                     {
+                        var useTypeEmojis = Settings.EmbedToggles.MoveTypeEmojis;
+                        var typeEmojis = Settings.EmbedToggles.CustomTypeEmojis
+                            .Where(e => !string.IsNullOrEmpty(e.EmojiCode))
+                            .ToDictionary(
+                                e => e.MoveType,
+                                e => $"{e.EmojiCode}"
+                            );
                         var res = GetSpecialRewards(allRewards[i], Settings.EmbedToggles.RewardsToShow);
                         RaidEmbedInfo.SpecialRewards = res;
                         if (string.IsNullOrEmpty(res))
@@ -3196,29 +3202,71 @@ namespace SysBot.Pokemon.SV.BotRaid
                         var pkinfo = RaidExtensions<PK9>.GetRaidPrintName(pk);
                         var strings = GameInfo.GetStrings(1);
                         var moves = new ushort[4] { allEncounters[i].Move1, allEncounters[i].Move2, allEncounters[i].Move3, allEncounters[i].Move4 };
-                        var movestr = string.Concat(moves.Where(z => z != 0).Select(z => $"{strings.Move[z]}ㅤ{Environment.NewLine}")).TrimEnd(Environment.NewLine.ToCharArray());
-                        var extramoves = string.Empty;
 
+                        var moveNames = new List<string>();
+                        for (int j = 0; j < moves.Length; j++)
+                        {
+                            if (moves[j] != 0)
+                            {
+                                string moveName = strings.Move[moves[j]];
+                                byte moveTypeId = MoveInfo.GetType(moves[j], (EntityContext)pk.Context);
+                                MoveType moveType = (MoveType)moveTypeId;
+
+                                if (useTypeEmojis && typeEmojis.TryGetValue(moveType, out var moveEmoji))
+                                {
+                                    moveNames.Add($"{moveEmoji} {moveName}");
+                                }
+                                else
+                                {
+                                    moveNames.Add($"\\- {moveName}");
+                                }
+                            }
+                        }
+                        RaidEmbedInfo.Moves = string.Join("\n", moveNames);
+
+                        var extraMoveNames = new List<string>();
                         if (allEncounters[i].ExtraMoves.Length != 0)
                         {
-                            var extraMovesList = allEncounters[i].ExtraMoves.Where(z => z != 0).Select(z => $"{strings.Move[z]}\n");
-                            extramoves = string.Concat(extraMovesList.Take(extraMovesList.Count()));
-                            RaidEmbedInfo.ExtraMoves = extramoves;
-                        }
+                            for (int j = 0; j < allEncounters[i].ExtraMoves.Length; j++)
+                            {
+                                if (allEncounters[i].ExtraMoves[j] != 0)
+                                {
+                                    string moveName = strings.Move[allEncounters[i].ExtraMoves[j]];
+                                    byte moveTypeId = MoveInfo.GetType(allEncounters[i].ExtraMoves[j], (EntityContext)pk.Context);
+                                    MoveType moveType = (MoveType)moveTypeId;
 
+                                    if (useTypeEmojis && typeEmojis.TryGetValue(moveType, out var moveEmoji))
+                                    {
+                                        extraMoveNames.Add($"{moveEmoji} {moveName}");
+                                    }
+                                    else
+                                    {
+                                        extraMoveNames.Add($"\\- {moveName}");
+                                    }
+                                }
+                            }
+                            RaidEmbedInfo.ExtraMoves = string.Join("\n", extraMoveNames);
+                        }
+                        var maleEmoji = Settings.EmbedToggles.MaleEmoji.EmojiString;
+                        var femaleEmoji = Settings.EmbedToggles.FemaleEmoji.EmojiString;
                         var titlePrefix = allRaids[i].IsShiny ? "Shiny" : "";
                         RaidEmbedInfo.RaidSpecies = (Species)allEncounters[i].Species;
                         RaidEmbedInfo.RaidSpeciesForm = allEncounters[i].Form;
                         RaidEmbedInfo.RaidEmbedTitle = $"{stars} ★ {titlePrefix} {(Species)allEncounters[i].Species}{pkinfo}";
-                        RaidEmbedInfo.RaidSpeciesGender = $"{(pk.Gender == 0 ? "Male" : pk.Gender == 1 ? "Female" : "Genderless")}";
+                        RaidEmbedInfo.RaidSpeciesGender = pk.Gender switch
+                        {
+                            0 when !string.IsNullOrEmpty(maleEmoji) => $"{maleEmoji} Male",
+                            1 when !string.IsNullOrEmpty(femaleEmoji) => $"{femaleEmoji} Female",
+                            _ => pk.Gender == 0 ? "Male" : pk.Gender == 1 ? "Female" : "Genderless"
+                        };
                         RaidEmbedInfo.RaidSpeciesNature = GameInfo.Strings.Natures[(int)pk.Nature];
                         RaidEmbedInfo.RaidSpeciesAbility = $"{(Ability)pk.Ability}";
                         RaidEmbedInfo.RaidSpeciesIVs = $"{pk.IV_HP}/{pk.IV_ATK}/{pk.IV_DEF}/{pk.IV_SPA}/{pk.IV_SPD}/{pk.IV_SPE}";
                         RaidEmbedInfo.RaidSpeciesTeraType = $"{(MoveType)allRaids[i].GetTeraType(encounter)}";
-                        RaidEmbedInfo.Moves = string.Concat(moves.Where(z => z != 0).Select(z => $"{strings.Move[z]}\n")).TrimEnd(Environment.NewLine.ToCharArray());
                         RaidEmbedInfo.ScaleText = $"{PokeSizeDetailedUtil.GetSizeRating(pk.Scale)}";
-                        RaidEmbedInfo.ScaleNumber = pk.Scale;
+                        RaidEmbedInfo.ScaleNumber = pk.Scale;                        
                         // Update Species and SpeciesForm in ActiveRaids
+
                         if (!Settings.ActiveRaids[a].ForceSpecificSpecies)
                         {
                             Settings.ActiveRaids[a].Species = (Species)allEncounters[i].Species;
@@ -3273,7 +3321,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             Log($"Seed {denHexSeedUInt:X8} not found in any region.");
         }
 
-        public static (PK9, Embed) RaidInfoCommand(string seedValue, int contentType, TeraRaidMapParent map, int storyProgressLevel, int raidDeliveryGroupID, List<string> rewardsToShow, int queuePosition = 0, bool isEvent = false)
+        public static (PK9, Embed) RaidInfoCommand(string seedValue, int contentType, TeraRaidMapParent map, int storyProgressLevel, int raidDeliveryGroupID, List<string> rewardsToShow, bool moveTypeEmojis, List<MoveTypeEmojiInfo> customTypeEmojis, int queuePosition = 0, bool isEvent = false)
         {
             byte[] enabled = StringToByteArray("00000001");
             byte[] area = StringToByteArray("00000001");
@@ -3318,22 +3366,53 @@ namespace SysBot.Pokemon.SV.BotRaid
             if (raid.IsShiny) pk.SetIsShiny(true);
             Encounter9RNG.GenerateData(pk, param, EncounterCriteria.Unrestricted, raid.Seed);
             var strings = GameInfo.GetStrings(1);
+            var useTypeEmojis = moveTypeEmojis;
+            var typeEmojis = customTypeEmojis
+                .Where(e => !string.IsNullOrEmpty(e.EmojiCode))
+                .ToDictionary(
+                    e => e.MoveType,
+                    e => $"{e.EmojiCode}"
+                );
+
             var movesList = "";
             bool hasMoves = false;
             for (int i = 0; i < pk.Moves.Length; i++)
             {
                 if (pk.Moves[i] != 0)
                 {
-                    movesList += $"\\- {strings.Move[pk.Moves[i]]}\n";
+                    string moveName = strings.Move[pk.Moves[i]];
+                    byte moveTypeId = MoveInfo.GetType(pk.Moves[i], (EntityContext)pk.Context);
+                    MoveType moveType = (MoveType)moveTypeId;
+
+                    if (useTypeEmojis && typeEmojis.TryGetValue(moveType, out var moveEmoji))
+                    {
+                        movesList += $"{moveEmoji} {moveName}\n";
+                    }
+                    else
+                    {
+                        movesList += $"\\- {moveName}\n";
+                    }
                     hasMoves = true;
                 }
             }
+
             var extraMoves = "";
             for (int i = 0; i < encounter.ExtraMoves.Length; i++)
             {
                 if (encounter.ExtraMoves[i] != 0)
                 {
-                    extraMoves += $"\\- {strings.Move[encounter.ExtraMoves[i]]}\n";
+                    string moveName = strings.Move[encounter.ExtraMoves[i]];
+                    byte moveTypeId = MoveInfo.GetType(encounter.ExtraMoves[i], (EntityContext)pk.Context);
+                    MoveType moveType = (MoveType)moveTypeId;
+
+                    if (useTypeEmojis && typeEmojis.TryGetValue(moveType, out var moveEmoji))
+                    {
+                        extraMoves += $"{moveEmoji} {moveName}\n";
+                    }
+                    else
+                    {
+                        extraMoves += $"\\- {moveName}\n";
+                    }
                     hasMoves = true;
                 }
             }

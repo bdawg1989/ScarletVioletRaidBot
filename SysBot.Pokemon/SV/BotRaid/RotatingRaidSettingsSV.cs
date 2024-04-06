@@ -8,6 +8,7 @@ using System.Threading;
 
 namespace SysBot.Pokemon
 {
+
     public class RotatingRaidSettingsSV : IBotStateSettings
     {
         private const string Hosting = nameof(Hosting);
@@ -143,10 +144,70 @@ namespace SysBot.Pokemon
             public bool EnableTimeRollBack { get; set; } = true;
         }
 
+        public class MoveTypeEmojiInfo
+        {
+            [Description("The type of move.")]
+            public MoveType MoveType { get; set; }
+
+            [Description("The Discord emoji string for this move type.")]
+            public string EmojiCode { get; set; }
+
+            public MoveTypeEmojiInfo() { }
+
+            public MoveTypeEmojiInfo(MoveType moveType)
+            {
+                MoveType = moveType;
+            }
+        }
+
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public class EmojiInfo
+        {
+            [Description("The full string for the emoji.")]
+            public string EmojiString { get; set; } = string.Empty;
+
+            public override string ToString()
+            {
+                return string.IsNullOrEmpty(EmojiString) ? "Not Set" : EmojiString;
+            }
+        }
+
         [Category(Hosting), TypeConverter(typeof(CategoryConverter<RotatingRaidPresetFiltersCategory>))]
         public class RotatingRaidPresetFiltersCategory
         {
             public override string ToString() => "Embed Toggles";
+
+            [Category(Hosting), Description("Will show Move Type Icons next to moves in trade embed (Discord only).  Requires user to upload the emojis to their server.")]
+            public bool MoveTypeEmojis { get; set; } = true;
+
+            [Category(Hosting), Description("Custom Emoji information for the move types.")]
+            public List<MoveTypeEmojiInfo> CustomTypeEmojis { get; set; } =
+            [
+            new(MoveType.Bug),
+            new(MoveType.Fire),
+            new(MoveType.Flying),
+            new(MoveType.Ground),
+            new(MoveType.Water),
+            new(MoveType.Grass),
+            new(MoveType.Ice),
+            new(MoveType.Rock),
+            new(MoveType.Ghost),
+            new(MoveType.Steel),
+            new(MoveType.Fighting),
+            new(MoveType.Electric),
+            new(MoveType.Dragon),
+            new(MoveType.Psychic),
+            new(MoveType.Dark),
+            new(MoveType.Normal),
+            new(MoveType.Poison),
+            new(MoveType.Fairy),
+            ];
+
+            [Category(Hosting), Description("The full string for the male gender emoji.")]
+            public EmojiInfo MaleEmoji { get; set; } = new EmojiInfo();
+
+            [Category(Hosting), Description("The full string for the female gender emoji.")]
+            public EmojiInfo FemaleEmoji { get; set; } = new EmojiInfo();
 
             [Category(Hosting), Description("Raid embed description.")]
             public string[] RaidEmbedDescription { get; set; } = Array.Empty<string>();
@@ -171,30 +232,30 @@ namespace SysBot.Pokemon
 
             [Category(Hosting), Description("Select which rewards to display in the embed.")]
             public List<string> RewardsToShow { get; set; } = new List<string>
-{
-    "Rare Candy",
-    "Ability Capsule",
-    "Bottle Cap",
-    "Ability Patch",
-    "Exp. Candy L",
-    "Exp. Candy XL",
-    "Sweet Herba Mystica",
-    "Salty Herba Mystica",
-    "Sour Herba Mystica",
-    "Bitter Herba Mystica",
-    "Spicy Herba Mystica",
-    "Pokeball",
-    "Shards",
-    "Nugget",
-    "Tiny Mushroom",
-    "Big Mushroom",
-    "Pearl",
-    "Big Pearl",
-    "Stardust",
-    "Star Piece",
-    "Gold Bottle Cap",
-    "PP Up"
-};
+            {
+                "Rare Candy",
+                "Ability Capsule",
+                "Bottle Cap",
+                "Ability Patch",
+                "Exp. Candy L",
+                "Exp. Candy XL",
+                "Sweet Herba Mystica",
+                "Salty Herba Mystica",
+                "Sour Herba Mystica",
+                "Bitter Herba Mystica",
+                "Spicy Herba Mystica",
+                "Pokeball",
+                "Shards",
+                "Nugget",
+                "Tiny Mushroom",
+                "Big Mushroom",
+                "Pearl",
+                "Big Pearl",
+                "Stardust",
+                "Star Piece",
+                "Gold Bottle Cap",
+                "PP Up"
+            };
 
             [Category(Hosting), Description("Amount of time (in seconds) to post a requested raid embed.")]
             public int RequestEmbedTime { get; set; } = 30;
