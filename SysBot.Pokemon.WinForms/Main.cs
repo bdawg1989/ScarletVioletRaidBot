@@ -25,7 +25,7 @@ namespace SysBot.Pokemon.WinForms
         public Main()
         {
             InitializeComponent();
-            this.Load += async (sender, e) => await InitializeAsync();
+            Load += async (sender, e) => await InitializeAsync();
 
             TC_Main.SelectedIndexChanged += TC_Main_SelectedIndexChanged;
             RTB_Logs.TextChanged += RTB_Logs_TextChanged;
@@ -38,7 +38,7 @@ namespace SysBot.Pokemon.WinForms
             string discordName = string.Empty;
 
             // Update checker
-            UpdateChecker updateChecker = new UpdateChecker();
+            UpdateChecker updateChecker = new();
             await UpdateChecker.CheckForUpdatesAsync();
 
             if (File.Exists(Program.ConfigPath))
@@ -380,7 +380,7 @@ namespace SysBot.Pokemon.WinForms
         {
         }
 
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e)
+        private void ComboBox1_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (sender is ComboBox comboBox)
             {
@@ -427,10 +427,10 @@ namespace SysBot.Pokemon.WinForms
             Color ElegantWhite = Color.FromArgb(255, 255, 255);// An elegant white for background and contrast
 
             // Set the background color of the form
-            this.BackColor = ElegantWhite;
+            BackColor = ElegantWhite;
 
             // Set the foreground color of the form (text color)
-            this.ForeColor = DeepBlue;
+            ForeColor = DeepBlue;
 
             // Set the background color of the tab control
             TC_Main.BackColor = SkyBlue;
@@ -493,10 +493,10 @@ namespace SysBot.Pokemon.WinForms
             Color MidnightBlack = Color.FromArgb(25, 25, 35);  // A near-black for the darkest areas
 
             // Set the background color of the form
-            this.BackColor = MidnightBlack;
+            BackColor = MidnightBlack;
 
             // Set the foreground color of the form (text color)
-            this.ForeColor = GhostlyGrey;
+            ForeColor = GhostlyGrey;
 
             // Set the background color of the tab control
             TC_Main.BackColor = GengarPurple;
@@ -557,10 +557,10 @@ namespace SysBot.Pokemon.WinForms
             Color DarkBlue = Color.FromArgb(26, 13, 171);
 
             // Set the background color of the form
-            this.BackColor = GentleGrey;
+            BackColor = GentleGrey;
 
             // Set the foreground color of the form (text color)
-            this.ForeColor = DarkBlue;
+            ForeColor = DarkBlue;
 
             // Set the background color of the tab control
             TC_Main.BackColor = SoftBlue;
@@ -623,10 +623,10 @@ namespace SysBot.Pokemon.WinForms
             Color MidnightBlack = Color.FromArgb(18, 19, 20); // A near-black for darker elements and depth
 
             // Set the background color of the form
-            this.BackColor = SleekGrey;
+            BackColor = SleekGrey;
 
             // Set the foreground color of the form (text color)
-            this.ForeColor = SoftWhite;
+            ForeColor = SoftWhite;
 
             // Set the background color of the tab control
             TC_Main.BackColor = DarkPokeRed;
@@ -688,10 +688,10 @@ namespace SysBot.Pokemon.WinForms
             Color SoftWhite = Color.FromArgb(245, 245, 245);
 
             // Set the background color of the form
-            this.BackColor = DarkGrey;
+            BackColor = DarkGrey;
 
             // Set the foreground color of the form (text color)
-            this.ForeColor = SoftWhite;
+            ForeColor = SoftWhite;
 
             // Set the background color of the tab control
             TC_Main.BackColor = LightGrey;

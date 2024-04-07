@@ -96,7 +96,7 @@ namespace SysBot.Pokemon.WinForms
             comboBox1.Name = "comboBox1";
             comboBox1.Size = new Size(214, 40);
             comboBox1.TabIndex = 11;
-            comboBox1.SelectedIndexChanged += comboBox1_SelectedIndexChanged;
+            comboBox1.SelectedIndexChanged += ComboBox1_SelectedIndexChanged;
             // 
             // CB_Protocol
             // 

@@ -289,7 +289,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
 
-            using MemoryStream ms = new MemoryStream(bytes);
+            using MemoryStream ms = new(bytes);
             var img = "cap.jpg";
             var embed = new EmbedBuilder { ImageUrl = $"attachment://{img}", Color = Color.Purple }
                 .WithFooter(new EmbedFooterBuilder { Text = $"Here's your screenshot." });
@@ -780,7 +780,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             // Find the index of the user's request in the queue, excluding Mystery Shiny Raids
             var userRequestIndex = Hub.Config.RotatingRaidSV.ActiveRaids.FindIndex(r => r.RequestedByUserID == userId && !r.Title.Contains("Mystery Shiny Raid"));
 
-            EmbedBuilder embed = new EmbedBuilder();
+            EmbedBuilder embed = new();
 
             if (userRequestIndex == -1)
             {
