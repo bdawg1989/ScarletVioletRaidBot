@@ -39,7 +39,7 @@ namespace SysBot.Pokemon.WinForms
 
             // Update checker
             UpdateChecker updateChecker = new UpdateChecker();
-            await updateChecker.CheckForUpdatesAsync();
+            await UpdateChecker.CheckForUpdatesAsync();
 
             if (File.Exists(Program.ConfigPath))
             {
