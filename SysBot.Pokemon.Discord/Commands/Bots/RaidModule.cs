@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Pokemon.RotatingRaidSettingsSV;
@@ -20,7 +21,7 @@ using static SysBot.Pokemon.SV.BotRaid.RotatingRaidBotSV;
 namespace SysBot.Pokemon.Discord.Commands.Bots
 {
     [Summary("Generates and queues various silly trade additions")]
-    public class RaidModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
+    public partial class RaidModule<T> : ModuleBase<SocketCommandContext> where T : PKM, new()
     {
         private readonly PokeRaidHub<T> Hub = SysCord<T>.Runner.Hub;
         private static DiscordSocketClient _client => SysCord<T>.Instance.GetClient();
@@ -428,7 +429,9 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             [Summary("Seed")] string seed,
             [Summary("Difficulty Level (1-7)")] int level,
             [Summary("Story Progress Level")] int storyProgressLevel = 6,
-            [Summary("Species Name (Optional)")] string? speciesName = null)
+            [Summary("Species Name or User Mention (Optional)")] string? speciesNameOrUserMention = null,
+            [Summary("User Mention 2 (Optional)")] SocketGuildUser? user2 = null,
+            [Summary("User Mention 3 (Optional)")] SocketGuildUser? user3 = null)
         {
             var botPrefix = SysCord<T>.Runner.Config.Discord.CommandPrefix;
             if (Hub.Config.RotatingRaidSV.RaidSettings.DisableRequests)
@@ -443,6 +446,35 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
 
+            // Check if the first parameter after story progress level is a user mention
+            bool isUserMention = speciesNameOrUserMention != null && MyRegex1().IsMatch(speciesNameOrUserMention);
+            SocketGuildUser? user1 = null;
+            string? speciesName = null;
+
+            if (isUserMention)
+            {
+                // Extract the user ID from the mention and retrieve the user
+                var userId2 = ulong.Parse(Regex.Match(speciesNameOrUserMention, @"\d+").Value);
+                user1 = Context.Guild.GetUser(userId2);
+            }
+            else
+            {
+                speciesName = speciesNameOrUserMention;
+            }
+
+            // Check if private raids are enabled
+            if (!Hub.Config.RotatingRaidSV.RaidSettings.PrivateRaidsEnabled && (user1 != null || user2 != null || user3 != null))
+            {
+                await ReplyAsync("Private raids are currently disabled by the host.").ConfigureAwait(false);
+                return;
+            }
+            // Check if the number of user mentions exceeds the limit
+            int mentionCount = (user1 != null ? 1 : 0) + (user2 != null ? 1 : 0) + (user3 != null ? 1 : 0);
+            if (mentionCount > 3)
+            {
+                await ReplyAsync("You can only mention up to 3 users for a private raid.").ConfigureAwait(false);
+                return;
+            }
             var userId = Context.User.Id;
             if (Hub.Config.RotatingRaidSV.ActiveRaids.Any(r => r.RequestedByUserID == userId))
             {
@@ -453,7 +485,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             var userRoles = (Context.User as SocketGuildUser)?.Roles.Select(r => r.Id) ?? new List<ulong>();
 
             if (!Hub.Config.RotatingRaidSV.RaidSettings.BypassLimitRequests.ContainsKey(userId) &&
-                !userRoles.Any(roleId => Hub.Config.RotatingRaidSV.RaidSettings.BypassLimitRequests.ContainsKey(roleId)))
+                !userRoles.Any(Hub.Config.RotatingRaidSV.RaidSettings.BypassLimitRequests.ContainsKey))
             {
                 if (!userRequestManager.CanRequest(userId, Hub.Config.RotatingRaidSV.RaidSettings.LimitRequests, Hub.Config.RotatingRaidSV.RaidSettings.LimitRequestsTime, out var remainingCooldown))
                 {
@@ -505,12 +537,12 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             int raidDeliveryGroupID = -1;
 
-            if (!string.IsNullOrEmpty(speciesName) && SpeciesToGroupIDMap.TryGetValue(speciesName, out var groupIDAndIndices))
+            if (isEvent && SpeciesToGroupIDMap.TryGetValue(speciesName, out var groupIDAndIndices))
             {
                 var firstRaidGroupID = groupIDAndIndices.First().GroupID;
                 raidDeliveryGroupID = firstRaidGroupID;
             }
-            else if (!string.IsNullOrEmpty(speciesName))
+            else if (isEvent)
             {
                 await ReplyAsync("Species name not recognized or not associated with an active event. Please check the name and try again.");
                 return;
@@ -566,6 +598,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 Title = $"{Context.User.Username}'s Requested Raid{(isEvent ? $" ({speciesName} Event Raid)" : "")}",
                 RaidUpNext = false,
                 User = Context.User,
+                MentionedUsers = new List<SocketUser> { user1, user2, user3 }.Where(u => u != null).ToList(),
             };
 
             // Check if Species is Ditto and set PartyPK to Showdown template
@@ -608,10 +641,26 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             var replyMsg = $"{Context.User.Mention}, added your raid to the queue! I'll DM you when it's about to start.";
             await ReplyAsync(replyMsg, embed: raidEmbed).ConfigureAwait(false);
 
+            // Notify the mentioned users
+            var mentionedUsers = new List<SocketGuildUser>();
+            if (user1 != null) mentionedUsers.Add(user1);
+            if (user2 != null) mentionedUsers.Add(user2);
+            if (user3 != null) mentionedUsers.Add(user3);
+
+            foreach (var user in mentionedUsers)
+            {
+                try
+                {
+                    await user.SendMessageAsync($"{Context.User.Username} invited you to a private raid! I'll DM you the code when it's about to start.", false, raidEmbed).ConfigureAwait(false);
+                }
+                catch
+                {
+                    await ReplyAsync($"Failed to send DM to {user.Mention}. Please make sure their DMs are open.").ConfigureAwait(false);
+                }
+            }
             try
             {
-                var user = Context.User as SocketGuildUser;
-                if (user != null)
+                if (Context.User is SocketGuildUser user)
                 {
                     await user.SendMessageAsync($"Here's your raid information:\n{queuePositionMessage}\nYour request command: `{newparam.RequestCommand}`", false, raidEmbed).ConfigureAwait(false);
                 }
@@ -1080,5 +1129,8 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 _ => EntityConverter.ConvertToType(dl.Data, typeof(T), out _) as T,
             };
         }
+
+        [GeneratedRegex(@"^<@!?\d+>$")]
+        private static partial Regex MyRegex1();
     }
 }

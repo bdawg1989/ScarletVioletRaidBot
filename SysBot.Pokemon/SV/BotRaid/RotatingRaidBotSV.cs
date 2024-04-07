@@ -25,7 +25,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private readonly PokeRaidHub<PK9> Hub;
         private readonly RotatingRaidSettingsSV Settings;
         private RemoteControlAccessList RaiderBanList => Settings.RaiderBanList;
-        public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap = new();
+        public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap = [];
 
         public RotatingRaidBotSV(PokeBotState cfg, PokeRaidHub<PK9> hub) : base(cfg)
         {
@@ -62,7 +62,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private readonly ulong[] TeraNIDOffsets = new ulong[3];
         private string TeraRaidCode { get; set; } = string.Empty;
         private string BaseDescription = string.Empty;
-        private readonly Dictionary<ulong, int> RaidTracker = new();
+        private readonly Dictionary<ulong, int> RaidTracker = [];
         private SAV9SV HostSAV = new();
         private DateTime StartTime = DateTime.Now;
         public static RaidContainer? container;
@@ -371,22 +371,30 @@ namespace SysBot.Pokemon.SV.BotRaid
                 if (Settings.ActiveRaids[RotationCount].AddedByRACommand)
                 {
                     var user = Settings.ActiveRaids[RotationCount].User;
+                    var mentionedUsers = Settings.ActiveRaids[RotationCount].MentionedUsers;
 
                     // Determine if the raid is a "Free For All"
                     bool isFreeForAll = !Settings.ActiveRaids[RotationCount].IsCoded || EmptyRaid >= Settings.LobbyOptions.EmptyRaidLimit;
 
-                    if (user != null && !isFreeForAll)
+                    if (!isFreeForAll)
                     {
                         try
                         {
                             // Only get and send the raid code if it's not a "Free For All"
                             var code = await GetRaidCode(token).ConfigureAwait(false);
-                            await user.SendMessageAsync($"Your Raid Code is **{code}**").ConfigureAwait(false);
+                            if (user != null)
+                            {
+                                await user.SendMessageAsync($"Your Raid Code is **{code}**").ConfigureAwait(false);
+                            }
+                            foreach (var mentionedUser in mentionedUsers)
+                            {
+                                await mentionedUser.SendMessageAsync($"The Raid Code for the private raid you were invited to by {user?.Username ?? "the host"} is **{code}**").ConfigureAwait(false);
+                            }
                         }
                         catch (Discord.Net.HttpException ex)
                         {
                             // Handle exception (e.g., log the error or send a message to a logging channel)
-                            Log($"Failed to send DM to {user.Username}. They might have DMs turned off. Exception: {ex.Message}");
+                            Log($"Failed to send DM to the user or mentioned users. They might have DMs turned off. Exception: {ex.Message}");
                         }
                     }
                 }
@@ -1509,21 +1517,30 @@ namespace SysBot.Pokemon.SV.BotRaid
             if (Settings.ActiveRaids[RotationCount].AddedByRACommand)
             {
                 var user = Settings.ActiveRaids[RotationCount].User;
+                var mentionedUsers = Settings.ActiveRaids[RotationCount].MentionedUsers;
 
                 // Determine if the raid is a "Free For All"
                 bool isFreeForAll = !Settings.ActiveRaids[RotationCount].IsCoded || EmptyRaid >= Settings.LobbyOptions.EmptyRaidLimit;
 
-                if (user != null && !isFreeForAll)
+                if (!isFreeForAll)
                 {
                     try
                     {
                         // Only send the message if it's not a "Free For All"
-                        await user.SendMessageAsync("Get Ready!  Your raid is about to start!").ConfigureAwait(false);
+                        if (user != null)
+                        {
+                            await user.SendMessageAsync("Get Ready! Your raid is being prepared now!").ConfigureAwait(false);
+                        }
+
+                        foreach (var mentionedUser in mentionedUsers)
+                        {
+                            await mentionedUser.SendMessageAsync($"Get Ready! The raid you were invited to by {user?.Username ?? "the host"} is about to start!").ConfigureAwait(false);
+                        }
                     }
                     catch (Discord.Net.HttpException ex)
                     {
                         // Handle exception (e.g., log the error or send a message to a logging channel)
-                        Log($"Failed to send DM to {user.Username}. They might have DMs turned off. Exception: {ex.Message}");
+                        Log($"Failed to send DM to the user or mentioned users. They might have DMs turned off. Exception: {ex.Message}");
                     }
                 }
             }
@@ -1748,7 +1765,7 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             await EnqueueEmbed(null, "", false, false, false, false, token).ConfigureAwait(false);
 
-            List<(ulong, RaidMyStatus)> lobbyTrainers = new();
+            List<(ulong, RaidMyStatus)> lobbyTrainers = [];
             var wait = TimeSpan.FromSeconds(Settings.RaidSettings.TimeToWait);
             var endTime = DateTime.Now + wait;
             bool full = false;
@@ -2074,7 +2091,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Settings.ActiveRaids[RotationCount].Title != "Mystery Shiny Raid" &&
                 code != "Free For All")
             {
-                await Task.Delay(Settings.EmbedToggles.RequestEmbedTime * 1000).ConfigureAwait(false);
+                await Task.Delay(Settings.EmbedToggles.RequestEmbedTime * 1000, token).ConfigureAwait(false);
             }
 
             // Description can only be up to 4096 characters.
@@ -2088,11 +2105,11 @@ namespace SysBot.Pokemon.SV.BotRaid
             if (disband) // Wait for trainer to load before disband
                 await Task.Delay(5_000, token).ConfigureAwait(false);
 
-            byte[]? bytes = Array.Empty<byte>();
+            byte[]? bytes = [];
             if (Settings.EmbedToggles.TakeScreenshot && !upnext)
                 try
                 {
-                    bytes = await SwitchConnection.PixelPeek(token).ConfigureAwait(false) ?? Array.Empty<byte>();
+                    bytes = await SwitchConnection.PixelPeek(token).ConfigureAwait(false) ?? [];
                 }
                 catch (Exception ex)
                 {
@@ -2392,42 +2409,6 @@ namespace SysBot.Pokemon.SV.BotRaid
             await Click(B, 0_500, token).ConfigureAwait(false);
             await Task.Delay(3_000, token).ConfigureAwait(false);
 
-            return true;
-        }
-
-        private async Task<bool> RecoverToOverworld(CancellationToken token)
-        {
-            if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-                return true;
-
-            Log("Attempting to recover to overworld.");
-            var attempts = 0;
-            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-            {
-                attempts++;
-                if (attempts >= 30)
-                    break;
-
-                await Click(B, 1_300, token).ConfigureAwait(false);
-                if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-                    break;
-
-                await Click(B, 2_000, token).ConfigureAwait(false);
-                if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-                    break;
-
-                await Click(A, 1_300, token).ConfigureAwait(false);
-                if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-                    break;
-            }
-
-            // We didn't make it for some reason.
-            if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-            {
-                Log("Failed to recover to overworld, rebooting the game.");
-                await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
-            }
-            await Task.Delay(1_000, token).ConfigureAwait(false);
             return true;
         }
 
@@ -3005,8 +2986,8 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private static (List<int> distGroupIDs, List<int> mightGroupIDs) GetPossibleGroups(RaidContainer container)
         {
-            List<int> distGroupIDs = new();
-            List<int> mightGroupIDs = new();
+            List<int> distGroupIDs = [];
+            List<int> mightGroupIDs = [];
 
             if (container.DistTeraRaids != null)
             {
@@ -3127,7 +3108,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                         {
                             if (!SpeciesToGroupIDMap.ContainsKey(speciesKey))
                             {
-                                SpeciesToGroupIDMap[speciesKey] = new List<(int GroupID, int Index, string DenIdentifier)> { (groupID, i, denIdentifier) };
+                                SpeciesToGroupIDMap[speciesKey] = [(groupID, i, denIdentifier)];
                             }
                             else
                             {
@@ -3492,10 +3473,6 @@ namespace SysBot.Pokemon.SV.BotRaid
             await Click(A, 1_000, token).ConfigureAwait(false);
             await Click(B, 1_000, token).ConfigureAwait(false);
             return true;
-        }
-
-        public class RaidEmbedInfo
-        {
         }
     }
 }

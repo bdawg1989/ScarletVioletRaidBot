@@ -82,6 +82,10 @@ namespace SysBot.Pokemon
             [Browsable(false)]
             [System.Text.Json.Serialization.JsonIgnore]
             public SocketUser? User { get; set; }
+
+            [Browsable(false)]
+            [System.Text.Json.Serialization.JsonIgnore]
+            public List<SocketUser> MentionedUsers { get; set; } = [];
         }
 
         [Category(Hosting), TypeConverter(typeof(CategoryConverter<EventSettingsCategory>))]
@@ -118,6 +122,9 @@ namespace SysBot.Pokemon
 
             [Category(Hosting), Description("When true, the bot will not allow user requested raids and will inform them that this setting is on.")]
             public bool DisableRequests { get; set; } = false;
+
+            [Category(Hosting), Description("When true, the bot will allow private raids.")]
+            public bool PrivateRaidsEnabled { get; set; } = true;
 
             [Category(Hosting), Description("Limit the number of requests a user can issue.  Set to 0 to disable.\nCommands: $lr <number>")]
             public int LimitRequests { get; set; } = 0;
