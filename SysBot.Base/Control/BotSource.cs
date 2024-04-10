@@ -62,6 +62,21 @@ namespace SysBot.Base
             IsRunning = true;
         }
 
+        public void RebootReset()
+        {
+            if (IsPaused)
+                Stop(); // can't soft-resume; just re-launch
+
+            if (IsRunning || IsStopping)
+                return;
+
+            Task.Run(() => Bot.RebootResetAsync(Source.Token)
+                .ContinueWith(ReportFailure, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously)
+                .ContinueWith(_ => IsRunning = false));
+
+            IsRunning = true;
+        }
+
         private void ReportFailure(Task finishedTask)
         {
             // Initialize firstFailureTime during the first failure

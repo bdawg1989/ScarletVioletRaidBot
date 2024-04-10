@@ -122,6 +122,19 @@ namespace SysBot.Pokemon.SV.BotRaid
             await HardStop().ConfigureAwait(false);
         }
 
+        public override async Task RebootReset(CancellationToken t)
+        {
+            await ReOpenGame(new PokeRaidHubConfig(), t).ConfigureAwait(false);
+            await HardStop().ConfigureAwait(false);
+
+            await Task.Delay(2_000, t).ConfigureAwait(false);
+            if (!t.IsCancellationRequested)
+            {
+                Log("Restarting the main loop.");
+                await MainLoop(t).ConfigureAwait(false);
+            }
+        }
+
         public class PlayerDataStorage
         {
             private readonly string filePath;
@@ -446,11 +459,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Directory.Delete("cache", true);
             }
             catch (Exception)
-            {
-                //dgaf about cache not existing
-            }
-
-            // Remove all Mystery Shiny Raids and other raids added by RA command
+            {}
             Settings.ActiveRaids.RemoveAll(p => p.AddedByRACommand);
             Settings.ActiveRaids.RemoveAll(p => p.Title == "Mystery Shiny Raid");
             await CleanExit(CancellationToken.None).ConfigureAwait(false);
@@ -509,14 +518,14 @@ namespace SysBot.Pokemon.SV.BotRaid
             // Ensure connection to lobby and log status
             if (!await CheckIfConnectedToLobbyAndLog(token))
             {
-                await ReOpenGame(Hub.Config, token);
+                await RebootReset(token);
                 return;
             }
 
             // Ensure in raid
             if (!await EnsureInRaid(token))
             {
-                await ReOpenGame(Hub.Config, token);
+                await RebootReset(token);
                 return;
             }
 
@@ -529,14 +538,14 @@ namespace SysBot.Pokemon.SV.BotRaid
             var lobbyTrainersFinal = new List<(ulong, RaidMyStatus)>();
             if (!await UpdateLobbyTrainersFinal(lobbyTrainersFinal, trainers, token))
             {
-                await ReOpenGame(Hub.Config, token);
+                await RebootReset(token);
                 return;
             }
 
             // Handle duplicates and embeds first
             if (!await HandleDuplicatesAndEmbeds(lobbyTrainersFinal, token))
             {
-                await ReOpenGame(Hub.Config, token);
+                await RebootReset(token);
                 return;
             }
 
@@ -546,7 +555,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             // Process battle actions
             if (!await ProcessBattleActions(token))
             {
-                await ReOpenGame(Hub.Config, token);
+                await RebootReset(token);
                 return;
             }
 
@@ -554,7 +563,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             bool ready = await HandleEndOfRaidActions(token);
             if (!ready)
             {
-                await ReOpenGame(Hub.Config, token);
+                await RebootReset(token);
                 return;
             }
 
