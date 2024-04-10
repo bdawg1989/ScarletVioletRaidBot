@@ -135,6 +135,22 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
         }
 
+        public override async Task RefreshMap(CancellationToken t)
+        {
+            await HardStop().ConfigureAwait(false);
+            await Task.Delay(2_000, t).ConfigureAwait(false);
+
+            await CloseGame(Hub.Config, t).ConfigureAwait(false);
+            await AdvanceDaySV(t).ConfigureAwait(false);
+            await StartGame(Hub.Config, t).ConfigureAwait(false);
+
+            if (!t.IsCancellationRequested)
+            {
+                Log("Restarting the main loop.");
+                await MainLoop(t).ConfigureAwait(false);
+            }
+        }
+
         public class PlayerDataStorage
         {
             private readonly string filePath;

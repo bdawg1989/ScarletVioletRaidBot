@@ -51,6 +51,7 @@ namespace SysBot.Pokemon.WinForms
             B_Start = new Button();
             B_RebootReset = new Button();
             ButtonPanel = new Panel();
+            button1 = new Button();
             TC_Main.SuspendLayout();
             Tab_Bots.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)NUD_Port).BeginInit();
@@ -209,10 +210,10 @@ namespace SysBot.Pokemon.WinForms
             B_Stop.FlatStyle = FlatStyle.Flat;
             B_Stop.Font = new Font("Calibri", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             B_Stop.ForeColor = SystemColors.ControlLightLight;
-            B_Stop.Location = new Point(459, 0);
+            B_Stop.Location = new Point(484, 0);
             B_Stop.Margin = new Padding(2);
             B_Stop.Name = "B_Stop";
-            B_Stop.Size = new Size(164, 42);
+            B_Stop.Size = new Size(139, 42);
             B_Stop.TabIndex = 1;
             B_Stop.Text = "Stop All";
             B_Stop.UseVisualStyleBackColor = false;
@@ -227,7 +228,7 @@ namespace SysBot.Pokemon.WinForms
             B_Start.Location = new Point(0, 0);
             B_Start.Margin = new Padding(2);
             B_Start.Name = "B_Start";
-            B_Start.Size = new Size(239, 42);
+            B_Start.Size = new Size(211, 42);
             B_Start.TabIndex = 0;
             B_Start.Text = "Start All";
             B_Start.UseVisualStyleBackColor = false;
@@ -239,10 +240,10 @@ namespace SysBot.Pokemon.WinForms
             B_RebootReset.FlatStyle = FlatStyle.Flat;
             B_RebootReset.Font = new Font("Calibri", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
             B_RebootReset.ForeColor = SystemColors.ControlLightLight;
-            B_RebootReset.Location = new Point(234, 0);
+            B_RebootReset.Location = new Point(206, 0);
             B_RebootReset.Margin = new Padding(2);
             B_RebootReset.Name = "B_RebootReset";
-            B_RebootReset.Size = new Size(229, 42);
+            B_RebootReset.Size = new Size(154, 42);
             B_RebootReset.TabIndex = 2;
             B_RebootReset.Text = "Reboot and Restart";
             B_RebootReset.UseVisualStyleBackColor = false;
@@ -251,6 +252,7 @@ namespace SysBot.Pokemon.WinForms
             // ButtonPanel
             // 
             ButtonPanel.BackColor = Color.Transparent;
+            ButtonPanel.Controls.Add(button1);
             ButtonPanel.Controls.Add(B_Stop);
             ButtonPanel.Controls.Add(B_Start);
             ButtonPanel.Controls.Add(B_RebootReset);
@@ -260,6 +262,21 @@ namespace SysBot.Pokemon.WinForms
             ButtonPanel.Name = "ButtonPanel";
             ButtonPanel.Size = new Size(623, 42);
             ButtonPanel.TabIndex = 0;
+            // 
+            // button1
+            // 
+            button1.BackColor = Color.LightSeaGreen;
+            button1.FlatStyle = FlatStyle.Flat;
+            button1.Font = new Font("Calibri", 12F, FontStyle.Regular, GraphicsUnit.Point, 0);
+            button1.ForeColor = SystemColors.ControlLightLight;
+            button1.Location = new Point(357, 0);
+            button1.Margin = new Padding(2);
+            button1.Name = "button1";
+            button1.Size = new Size(130, 42);
+            button1.TabIndex = 2;
+            button1.Text = "Refresh Map";
+            button1.UseVisualStyleBackColor = false;
+            button1.Click += RefreshMap_Click;
             // 
             // Main
             // 
@@ -302,6 +319,7 @@ namespace SysBot.Pokemon.WinForms
         private ComboBox comboBox1;
         private Button B_RebootReset;
         private Panel ButtonPanel;
+        private Button button1;
     }
 }
 

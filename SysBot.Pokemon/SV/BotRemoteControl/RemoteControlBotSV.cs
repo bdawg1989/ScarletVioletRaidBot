@@ -51,6 +51,11 @@ namespace SysBot.Pokemon
             }
         }
 
+        public override async Task RefreshMap(CancellationToken t)
+        {
+            await ReOpenGame(new PokeRaidHubConfig(), t).ConfigureAwait(false);
+        }
+
         private class DummyReset : IBotStateSettings
         {
             public bool ScreenOff => true;
