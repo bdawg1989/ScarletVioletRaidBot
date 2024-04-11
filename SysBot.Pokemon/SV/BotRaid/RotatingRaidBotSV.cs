@@ -145,8 +145,8 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             if (!t.IsCancellationRequested)
             {
-                Log("Restarting the inner loop.");
-                await InnerLoop(t).ConfigureAwait(false);
+                Log("Restarting the main loop.");
+                await MainLoop(t).ConfigureAwait(false);
             }
         }
 
