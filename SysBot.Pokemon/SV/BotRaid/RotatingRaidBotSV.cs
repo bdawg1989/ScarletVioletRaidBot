@@ -2614,7 +2614,7 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             LostRaid = 0;
 
-            if (Settings.RaidSettings.MysteryRaids && !firstRun)
+            if (Settings.RaidSettings.MysteryRaids)
             {
                 // Count the number of existing Mystery Shiny Raids
                 int mysteryRaidCount = Settings.ActiveRaids.Count(raid => raid.Title.Contains("Mystery Shiny Raid"));
