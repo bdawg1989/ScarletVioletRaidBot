@@ -1,5 +1,6 @@
 using Discord;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using PKHeX.Core;
 using RaidCrawler.Core.Structures;
 using SysBot.Base;
@@ -138,10 +139,11 @@ namespace SysBot.Pokemon.SV.BotRaid
         {
             await HardStop().ConfigureAwait(false);
             await Task.Delay(2_000, t).ConfigureAwait(false);
-
-            await CloseGame(Hub.Config, t).ConfigureAwait(false);
+            await Click(B, 3_000, t).ConfigureAwait(false);
+            await Click(B, 3_000, t).ConfigureAwait(false);
+            await GoHome(Hub.Config, t).ConfigureAwait(false);
             await AdvanceDaySV(t).ConfigureAwait(false);
-            await StartGame(Hub.Config, t).ConfigureAwait(false);
+            await SaveGame(Hub.Config, t).ConfigureAwait(false);
 
             if (!t.IsCancellationRequested)
             {
@@ -3530,11 +3532,11 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task<bool> SaveGame(PokeRaidHubConfig config, CancellationToken token)
         {
+            Log("Saving the Game.");
+            await Click(B, 3_000, token).ConfigureAwait(false);
+            await Click(B, 3_000, token).ConfigureAwait(false);
             await Click(X, 3_000, token).ConfigureAwait(false);
-            await Click(R, 3_000 + config.Timings.ExtraTimeConnectOnline, token).ConfigureAwait(false);
-            await Click(A, 3_000, token).ConfigureAwait(false);
-            await Click(A, 1_000, token).ConfigureAwait(false);
-            await Click(B, 1_000, token).ConfigureAwait(false);
+            await Click(L, 5_000 + Hub.Config.Timings.ExtraTimeConnectOnline, token).ConfigureAwait(false);
             return true;
         }
     }
