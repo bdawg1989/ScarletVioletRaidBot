@@ -64,11 +64,11 @@ namespace SysBot.Pokemon.SV.BotRaid
         private string BaseDescription = string.Empty;
         private readonly Dictionary<ulong, int> RaidTracker = [];
         private SAV9SV HostSAV = new();
-        private DateTime StartTime = DateTime.Now;
+        private static readonly DateTime StartTime = DateTime.Now;
         public static RaidContainer? container;
         public static bool IsKitakami = false;
         public static bool IsBlueberry = false;
-        private DateTime TimeForRollBackCheck = DateTime.Now;
+        private static DateTime TimeForRollBackCheck = DateTime.Now;
         private string denHexSeed;
         private readonly bool indicesInitialized = false;
         private static readonly int KitakamiDensCount = 0;
@@ -126,12 +126,11 @@ namespace SysBot.Pokemon.SV.BotRaid
         {
             await ReOpenGame(new PokeRaidHubConfig(), t).ConfigureAwait(false);
             await HardStop().ConfigureAwait(false);
-
             await Task.Delay(2_000, t).ConfigureAwait(false);
             if (!t.IsCancellationRequested)
             {
-                Log("Restarting the main loop.");
-                await MainLoop(t).ConfigureAwait(false);
+                Log("Restarting the inner loop.");
+                await InnerLoop(t).ConfigureAwait(false);
             }
         }
 
@@ -146,8 +145,8 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             if (!t.IsCancellationRequested)
             {
-                Log("Restarting the main loop.");
-                await MainLoop(t).ConfigureAwait(false);
+                Log("Restarting the inner loop.");
+                await InnerLoop(t).ConfigureAwait(false);
             }
         }
 
@@ -336,7 +335,6 @@ namespace SysBot.Pokemon.SV.BotRaid
         private async Task InnerLoop(CancellationToken token)
         {
             bool partyReady;
-            StartTime = DateTime.Now;
             RotationCount = 0;
             var raidsHosted = 0;
 
@@ -379,16 +377,16 @@ namespace SysBot.Pokemon.SV.BotRaid
                 await SwitchConnection.WriteBytesAbsoluteAsync(new byte[32], TeraNIDOffsets[0], token).ConfigureAwait(false);
 
                 // Connect online and enter den.
-                if (!await PrepareForRaid(token).ConfigureAwait(false))
+                int prepareResult = await PrepareForRaid(token).ConfigureAwait(false);
+                if (prepareResult == 2)
                 {
-                    if (firstRun)
-                    {
-                        Log("Seed Injected Successfully, restarting game to complete.");
-                    }
-                    else
-                    {
-                        Log("Failed to prepare the raid, rebooting the game.");
-                    }
+                    // Seed was injected, restart the loop
+                    continue;
+                }
+                else if (prepareResult == 0)
+                {
+                    // Preparation failed, reboot the game
+                    Log("Failed to prepare the raid, rebooting the game.");
                     await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
                     continue;
                 }
@@ -581,14 +579,23 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task PerformRebootAndReset(CancellationToken t)
         {
+            EmbedBuilder embed = new()
+            {
+                Title = "Bot Reset",
+                Description = "The bot encountered an issue and is currently resetting. Please stand by.",
+                Color = Color.Red,
+                ThumbnailUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/x.png"
+            };
+            EchoUtil.RaidEmbed(null, "", embed);
+
             await ReOpenGame(new PokeRaidHubConfig(), t).ConfigureAwait(false);
             await HardStop().ConfigureAwait(false);
-
             await Task.Delay(2_000, t).ConfigureAwait(false);
+
             if (!t.IsCancellationRequested)
             {
-                Log("Restarting the main loop.");
-                await MainLoop(t).ConfigureAwait(false);
+                Log("Restarting the inner loop.");
+                await InnerLoop(t).ConfigureAwait(false);
             }
         }
 
@@ -1542,8 +1549,21 @@ namespace SysBot.Pokemon.SV.BotRaid
             await SwitchConnection.WriteBytesAbsoluteAsync(pk.EncryptedBoxData, offset, token).ConfigureAwait(false);
         }
 
-        private async Task<bool> PrepareForRaid(CancellationToken token)
+        private async Task<int> PrepareForRaid(CancellationToken token)
         {
+            _ = Settings.ActiveRaids[RotationCount];
+            var currentSeed = Settings.ActiveRaids[RotationCount].Seed.ToUpper();
+
+            if (!denHexSeed.Equals(currentSeed, StringComparison.CurrentCultureIgnoreCase))
+            {
+                Log("Raid Den and Current Seed do not match. Injecting correct seed.");
+                await CloseGame(Hub.Config, token).ConfigureAwait(false);
+                await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
+
+                Log("Seed injected Successfully!");
+                return 2; 
+            }
+
             if (Settings.ActiveRaids[RotationCount].AddedByRACommand)
             {
                 var user = Settings.ActiveRaids[RotationCount].User;
@@ -1580,25 +1600,10 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             if (!await ConnectToOnline(Hub.Config, token))
             {
-                return false;
+                return 0;
             }
 
             await Task.Delay(0_500, token).ConfigureAwait(false);
-            await Click(HOME, 0_500, token).ConfigureAwait(false);
-            await Click(HOME, 0_500, token).ConfigureAwait(false);
-            _ = Settings.ActiveRaids[RotationCount];
-
-            var currentSeed = Settings.ActiveRaids[RotationCount].Seed.ToUpper();
-            if (denHexSeed.ToUpper() != currentSeed)
-            {
-                Log("Raid Den and Current Seed do not match.  Restarting to inject correct seed.");
-                await CloseGame(Hub.Config, token).ConfigureAwait(false);
-                await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
-                await SaveGame(Hub.Config, token).ConfigureAwait(false);
-                Log("Saved the game.");
-                return false;
-            }
-
             var len = string.Empty;
             foreach (var l in Settings.ActiveRaids[RotationCount].PartyPK)
                 len += l;
@@ -1633,7 +1638,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             await Task.Delay(1_500, token).ConfigureAwait(false);
 
             if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-                return false;
+                return 0;
 
             await Click(A, 3_000, token).ConfigureAwait(false);
             await Click(A, 3_000, token).ConfigureAwait(false);
@@ -1650,7 +1655,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
 
             await Click(A, 8_000, token).ConfigureAwait(false);
-            return true;
+            return 1;
         }
 
         private async Task RollBackHour(CancellationToken token)
@@ -2352,6 +2357,34 @@ namespace SysBot.Pokemon.SV.BotRaid
             embed.ThumbnailUrl = turl;
             embed.WithImageUrl($"attachment://{fileName}");
             EchoUtil.RaidEmbed(bytes, fileName, embed);
+        }
+
+        private async Task<bool> ReconnectToOnlineAfterSeedInjection(CancellationToken token)
+        {
+            int attemptCount = 0;
+            const int maxAttempt = 5;
+
+            while (attemptCount < maxAttempt)
+            {
+                if (await IsConnectedOnline(ConnectedOffset, token).ConfigureAwait(false))
+                {
+                    Log("Reconnected to online successfully after seed injection.");
+                    return true;
+                }
+
+                attemptCount++;
+                Log($"Attempt {attemptCount} of {maxAttempt}: Trying to reconnect online after seed injection...");
+
+                // Connection attempt logic
+                await Click(X, 3_000, token).ConfigureAwait(false);
+                await Click(L, 5_000 + Hub.Config.Timings.ExtraTimeConnectOnline, token).ConfigureAwait(false);
+
+                // Wait a bit before rechecking the connection status
+                await Task.Delay(5000, token).ConfigureAwait(false);
+            }
+
+            Log($"Failed to reconnect to online after {maxAttempt} attempts.");
+            return false;
         }
 
         private async Task<bool> ConnectToOnline(PokeRaidHubConfig config, CancellationToken token)
