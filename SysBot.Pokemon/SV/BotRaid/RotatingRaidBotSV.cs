@@ -529,62 +529,67 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task CompleteRaid(CancellationToken token)
         {
-            var trainers = new List<(ulong, RaidMyStatus)>();
-
-            // Ensure connection to lobby and log status
-            if (!await CheckIfConnectedToLobbyAndLog(token))
+            try
             {
-                await RebootReset(token);
-                return;
-            }
+                var trainers = new List<(ulong, RaidMyStatus)>();
 
-            // Ensure in raid
-            if (!await EnsureInRaid(token))
+                if (!await CheckIfConnectedToLobbyAndLog(token))
+                {
+                    throw new Exception("Not connected to lobby");
+                }
+
+                if (!await EnsureInRaid(token))
+                {
+                    throw new Exception("Not in raid");
+                }
+
+                var screenshotDelay = (int)Settings.EmbedToggles.ScreenshotTiming;
+                await Task.Delay(screenshotDelay, token).ConfigureAwait(false);
+
+                var lobbyTrainersFinal = new List<(ulong, RaidMyStatus)>();
+                if (!await UpdateLobbyTrainersFinal(lobbyTrainersFinal, trainers, token))
+                {
+                    throw new Exception("Failed to update lobby trainers");
+                }
+
+                if (!await HandleDuplicatesAndEmbeds(lobbyTrainersFinal, token))
+                {
+                    throw new Exception("Failed to handle duplicates and embeds");
+                }
+
+                await Task.Delay(10_000, token).ConfigureAwait(false);
+
+                if (!await ProcessBattleActions(token))
+                {
+                    throw new Exception("Failed to process battle actions");
+                }
+
+                bool isRaidCompleted = await HandleEndOfRaidActions(token);
+                if (!isRaidCompleted)
+                {
+                    throw new Exception("Raid not completed");
+                }
+
+                await FinalizeRaidCompletion(trainers, isRaidCompleted, token);
+            }
+            catch (Exception ex)
             {
-                await RebootReset(token);
-                return;
+                Log($"Error occurred during raid: {ex.Message}");
+                await PerformRebootAndReset(token);
             }
+        }
 
-            // Use the ScreenshotTiming setting for the delay before taking a screenshot in Raid
-            var screenshotDelay = (int)Settings.EmbedToggles.ScreenshotTiming;
+        private async Task PerformRebootAndReset(CancellationToken t)
+        {
+            await ReOpenGame(new PokeRaidHubConfig(), t).ConfigureAwait(false);
+            await HardStop().ConfigureAwait(false);
 
-            // Use the delay in milliseconds as needed
-            await Task.Delay(screenshotDelay, token).ConfigureAwait(false);
-
-            var lobbyTrainersFinal = new List<(ulong, RaidMyStatus)>();
-            if (!await UpdateLobbyTrainersFinal(lobbyTrainersFinal, trainers, token))
+            await Task.Delay(2_000, t).ConfigureAwait(false);
+            if (!t.IsCancellationRequested)
             {
-                await RebootReset(token);
-                return;
+                Log("Restarting the main loop.");
+                await MainLoop(t).ConfigureAwait(false);
             }
-
-            // Handle duplicates and embeds first
-            if (!await HandleDuplicatesAndEmbeds(lobbyTrainersFinal, token))
-            {
-                await RebootReset(token);
-                return;
-            }
-
-            // Delay to start ProcessBattleActions
-            await Task.Delay(10_000, token).ConfigureAwait(false);
-
-            // Process battle actions
-            if (!await ProcessBattleActions(token))
-            {
-                await RebootReset(token);
-                return;
-            }
-
-            // Handle end of raid actions
-            bool ready = await HandleEndOfRaidActions(token);
-            if (!ready)
-            {
-                await RebootReset(token);
-                return;
-            }
-
-            // Finalize raid completion
-            await FinalizeRaidCompletion(trainers, ready, token);
         }
 
         private async Task<bool> CheckIfConnectedToLobbyAndLog(CancellationToken token)
