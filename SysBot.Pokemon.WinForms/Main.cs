@@ -266,17 +266,12 @@ namespace SysBot.Pokemon.WinForms
 
         private void RefreshMap_Click(object sender, EventArgs e)
         {
-            Task.Run(async () =>
-            {
-                await Task.Delay(3_500).ConfigureAwait(false);
-                SaveCurrentConfig();
-                LogUtil.LogInfo("Refreshing map on next opportunity.", "Refresh Map: ");
-                RunningEnvironment.InitializeStart();
-                SendAll(BotControlCommand.RefreshMap);
-                Tab_Logs.Select();
-                if (Bots.Count == 0)
-                    WinFormsUtil.Alert("No bots configured, but all supporting services have been issued the refresh map command.");
-            });
+            SaveCurrentConfig();
+            LogUtil.LogInfo("Refreshing map on next opportunity.", "Refresh Map: ");
+            SendAll(BotControlCommand.RefreshMap);
+            Tab_Logs.Select();
+            if (Bots.Count == 0)
+                WinFormsUtil.Alert("No bots configured, but all supporting services have been issued the refresh map command.");
         }
 
         private void SendAll(BotControlCommand cmd)
