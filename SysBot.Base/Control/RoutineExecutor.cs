@@ -55,10 +55,7 @@ namespace SysBot.Base
 
         public async Task RefreshMapAsync(CancellationToken token)
         {
-            Connection.Connect();
-            await InitialStartup(token).ConfigureAwait(false);
             await RefreshMap(token).ConfigureAwait(false);
-            Connection.Disconnect();
         }
 
         public abstract Task MainLoop(CancellationToken token);

@@ -265,13 +265,14 @@ namespace SysBot.Pokemon.WinForms
         }
 
         private void RefreshMap_Click(object sender, EventArgs e)
-        {
+        { 
             SaveCurrentConfig();
-            LogUtil.LogInfo("Refreshing map on next opportunity.", "Refresh Map: ");
+            LogUtil.LogInfo("Sending RefreshMap command to all bots.", "Refresh Map");
             SendAll(BotControlCommand.RefreshMap);
             Tab_Logs.Select();
             if (Bots.Count == 0)
                 WinFormsUtil.Alert("No bots configured, but all supporting services have been issued the refresh map command.");
+
         }
 
         private void SendAll(BotControlCommand cmd)

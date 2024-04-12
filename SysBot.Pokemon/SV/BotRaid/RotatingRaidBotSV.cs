@@ -27,7 +27,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private readonly RotatingRaidSettingsSV Settings;
         private RemoteControlAccessList RaiderBanList => Settings.RaiderBanList;
         public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap = [];
-        private bool shouldRefreshMap = false;
+        
 
         public RotatingRaidBotSV(PokeBotState cfg, PokeRaidHub<PK9> hub) : base(cfg)
         {
@@ -76,6 +76,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private static readonly int KitakamiDensCount = 0;
         private static readonly int BlueberryDensCount = 0;
         private readonly int InvalidDeliveryGroupCount = 0;
+        private bool shouldRefreshMap = false;
 
         public override async Task MainLoop(CancellationToken token)
         {
@@ -1545,6 +1546,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         {
             if (shouldRefreshMap)
             {
+                Log("Starting Refresh map process...");
                 await HardStop().ConfigureAwait(false);
                 await Task.Delay(2_000, token).ConfigureAwait(false);
                 await Click(B, 3_000, token).ConfigureAwait(false);
@@ -1555,7 +1557,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 shouldRefreshMap = false;
                 if (!token.IsCancellationRequested)
                 {
-                    Log("Restarting the main loop.");
+                    Log("Map Refresh Completed. Restarting the main loop...");
                     await MainLoop(token).ConfigureAwait(false);
                 }
             }

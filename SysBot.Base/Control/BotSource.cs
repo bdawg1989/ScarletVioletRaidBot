@@ -79,10 +79,10 @@ namespace SysBot.Base
 
         public void RefreshMap()
         {
-            if (IsPaused || IsRunning || IsStopping)
+            if (IsStopping)
                 return;
-
-            Bot.RefreshMap(Source.Token);
+            Task.Run(() => Bot.RefreshMapAsync(Source.Token)
+                .ContinueWith(ReportFailure, TaskContinuationOptions.OnlyOnFaulted | TaskContinuationOptions.ExecuteSynchronously));
         }
 
         private void ReportFailure(Task finishedTask)
