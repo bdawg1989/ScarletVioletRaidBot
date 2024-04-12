@@ -266,12 +266,11 @@ namespace SysBot.Pokemon.WinForms
 
         private void RefreshMap_Click(object sender, EventArgs e)
         {
-            B_Stop_Click(sender, e);
             Task.Run(async () =>
             {
                 await Task.Delay(3_500).ConfigureAwait(false);
                 SaveCurrentConfig();
-                LogUtil.LogInfo("Refreshing map...", "Form");
+                LogUtil.LogInfo("Refreshing map on next opportunity.", "Refresh Map: ");
                 RunningEnvironment.InitializeStart();
                 SendAll(BotControlCommand.RefreshMap);
                 Tab_Logs.Select();

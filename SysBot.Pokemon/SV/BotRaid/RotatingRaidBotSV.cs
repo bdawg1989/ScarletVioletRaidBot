@@ -27,6 +27,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private readonly RotatingRaidSettingsSV Settings;
         private RemoteControlAccessList RaiderBanList => Settings.RaiderBanList;
         public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap = [];
+        private bool shouldRefreshMap = false;
 
         public RotatingRaidBotSV(PokeBotState cfg, PokeRaidHub<PK9> hub) : base(cfg)
         {
@@ -135,21 +136,10 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
         }
 
-        public override async Task RefreshMap(CancellationToken t)
+        public override Task RefreshMap(CancellationToken t)
         {
-            await HardStop().ConfigureAwait(false);
-            await Task.Delay(2_000, t).ConfigureAwait(false);
-            await Click(B, 3_000, t).ConfigureAwait(false);
-            await Click(B, 3_000, t).ConfigureAwait(false);
-            await GoHome(Hub.Config, t).ConfigureAwait(false);
-            await AdvanceDaySV(t).ConfigureAwait(false);
-            await SaveGame(Hub.Config, t).ConfigureAwait(false);
-
-            if (!t.IsCancellationRequested)
-            {
-                Log("Restarting the main loop.");
-                await MainLoop(t).ConfigureAwait(false);
-            }
+            shouldRefreshMap = true;
+            return Task.CompletedTask;
         }
 
         public class PlayerDataStorage
@@ -1553,6 +1543,23 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task<int> PrepareForRaid(CancellationToken token)
         {
+            if (shouldRefreshMap)
+            {
+                await HardStop().ConfigureAwait(false);
+                await Task.Delay(2_000, token).ConfigureAwait(false);
+                await Click(B, 3_000, token).ConfigureAwait(false);
+                await Click(B, 3_000, token).ConfigureAwait(false);
+                await GoHome(Hub.Config, token).ConfigureAwait(false);
+                await AdvanceDaySV(token).ConfigureAwait(false);
+                await SaveGame(Hub.Config, token).ConfigureAwait(false);
+                shouldRefreshMap = false;
+                if (!token.IsCancellationRequested)
+                {
+                    Log("Restarting the main loop.");
+                    await MainLoop(token).ConfigureAwait(false);
+                }
+            }
+
             _ = Settings.ActiveRaids[RotationCount];
             var currentSeed = Settings.ActiveRaids[RotationCount].Seed.ToUpper();
 
