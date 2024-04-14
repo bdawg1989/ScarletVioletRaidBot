@@ -2,7 +2,7 @@
 
 ## Hello, and welcome to my RaidBot Project.  For support, please visit our discord community at https://notpaldea.net
 
-![image](https://github.com/bdawg1989/NotPaldeaNET/assets/80122551/8fe759cb-72b1-44aa-8d5b-f084cf12d5f2)
+![image](https://github.com/bdawg1989/NotRaidBot/assets/80122551/258bd7ab-0982-4641-9a3d-41bd192828dc)
 
 ![image](https://github.com/bdawg1989/NotPaldeaNET/assets/80122551/cc9e2d9e-eb54-4717-a896-b7afa163e1c3)
 
