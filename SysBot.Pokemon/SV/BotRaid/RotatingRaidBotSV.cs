@@ -72,6 +72,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         public static bool IsBlueberry = false;
         private static DateTime TimeForRollBackCheck = DateTime.Now;
         private string denHexSeed;
+        private int seedMismatchCount = 0;
         private readonly bool indicesInitialized = false;
         private static readonly int KitakamiDensCount = 0;
         private static readonly int BlueberryDensCount = 0;
@@ -1567,12 +1568,26 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             if (!denHexSeed.Equals(currentSeed, StringComparison.CurrentCultureIgnoreCase))
             {
-                Log("Raid Den and Current Seed do not match. Injecting correct seed.");
+                seedMismatchCount++;
+                Log($"Raid Den and Current Seed do not match. Mismatch count: {seedMismatchCount}");
+
+                if (seedMismatchCount >= 2)
+                {
+                    Log("Seeds have mismatched 2 times in a row. Refreshing the map.");
+                    shouldRefreshMap = true;
+                    seedMismatchCount = 0;
+                    return 2;
+                }
+
+                Log("Injecting correct seed.");
                 await CloseGame(Hub.Config, token).ConfigureAwait(false);
                 await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
-
                 Log("Seed injected Successfully!");
-                return 2; 
+                return 2;
+            }
+            else
+            {
+                seedMismatchCount = 0;
             }
 
             if (Settings.ActiveRaids[RotationCount].AddedByRACommand)
