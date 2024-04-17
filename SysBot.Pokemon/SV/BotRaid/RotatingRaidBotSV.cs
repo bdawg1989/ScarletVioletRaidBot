@@ -536,8 +536,11 @@ namespace SysBot.Pokemon.SV.BotRaid
                     throw new Exception("Not in raid");
                 }
 
-                var screenshotDelay = (int)Settings.EmbedToggles.ScreenshotTiming;
-                await Task.Delay(screenshotDelay, token).ConfigureAwait(false);
+                if (!Settings.EmbedToggles.AnimatedScreenshot)
+                {
+                    var screenshotDelay = (int)Settings.EmbedToggles.ScreenshotTiming;
+                    await Task.Delay(screenshotDelay, token).ConfigureAwait(false);
+                }
 
                 var lobbyTrainersFinal = new List<(ulong, RaidMyStatus)>();
                 if (!await UpdateLobbyTrainersFinal(lobbyTrainersFinal, trainers, token))
@@ -718,7 +721,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 {
                     try
                     {
-                        await Task.Delay(20_000, token).ConfigureAwait(false);
+                        await Task.Delay(5_000, token);
                         await EnqueueEmbed(null, "", false, false, false, false, token).ConfigureAwait(false);
                         success = true;
                         break;
@@ -2134,11 +2137,14 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task<byte[]?> CaptureGifScreenshotsAsync(CancellationToken token)
         {
-            var screenshotCount = 20;
-            var screenshotInterval = TimeSpan.FromSeconds(0 / 20);
+            var frameCount = 20;
             var gifFrames = new List<System.Drawing.Image>();
+            var gifWidth = 450;
+            var gifHeight = 270;
+            var gifQuality = GifQuality.Bit8;
+            var frameDelay = 180;
 
-            for (int i = 0; i < screenshotCount; i++)
+            for (int i = 0; i < frameCount; i++)
             {
                 byte[] bytes;
                 try
@@ -2153,35 +2159,31 @@ namespace SysBot.Pokemon.SV.BotRaid
 
                 if (bytes.Length == 0)
                 {
-                    Log("No screenshot data received.");
+                    Log("No frame data received.");
                     return null;
                 }
 
-                using (var ms = new MemoryStream(bytes))
-                {
-                    using (var bitmap = new Bitmap(ms))
-                    {
-                        var frame = bitmap.Clone(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.PixelFormat.Format32bppArgb);
-                        gifFrames.Add(frame);
-                    }
-                }
+                using var ms = new MemoryStream(bytes);
+                using var bitmap = new Bitmap(ms);
+                var resizedFrame = bitmap.GetThumbnailImage(gifWidth, gifHeight, null, IntPtr.Zero);
+                var frame = ((Bitmap)resizedFrame).Clone(new Rectangle(0, 0, resizedFrame.Width, resizedFrame.Height), System.Drawing.Imaging.PixelFormat.Format32bppPArgb);
+                gifFrames.Add(frame);
+                resizedFrame.Dispose();
 
-                await Task.Delay(screenshotInterval, token).ConfigureAwait(false);
+                await Task.Delay(50, token);
             }
 
-            using (var ms = new MemoryStream())
+            using var outputMs = new MemoryStream();
+            using (var gif = new AnimatedGifCreator(outputMs, frameDelay))
             {
-                using (var gif = new AnimatedGifCreator(ms, 220))
+                foreach (var frame in gifFrames)
                 {
-                    foreach (var frame in gifFrames)
-                    {
-                        gif.AddFrame(frame);
-                        frame.Dispose();
-                    }
+                    gif.AddFrame(frame, quality: (GifQuality)(int)gifQuality);
+                    frame.Dispose();
                 }
-
-                return ms.ToArray();
             }
+
+            return outputMs.ToArray();
         }
 
         private async Task EnqueueEmbed(List<string>? names, string message, bool hatTrick, bool disband, bool upnext, bool raidstart, CancellationToken token)

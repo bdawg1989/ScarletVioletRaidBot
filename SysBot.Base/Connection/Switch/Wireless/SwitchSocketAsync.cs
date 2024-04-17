@@ -247,7 +247,6 @@ namespace SysBot.Base
         public async Task<byte[]> PixelPeek(CancellationToken token)
         {
             await SendAsync(SwitchCommand.PixelPeek(), token).ConfigureAwait(false);
-            await Task.Delay(Connection.ReceiveBufferSize / DelayFactor + BaseDelay, token).ConfigureAwait(false);
 
             var data = await FlexRead(token).ConfigureAwait(false);
             var result = Array.Empty<byte>();
