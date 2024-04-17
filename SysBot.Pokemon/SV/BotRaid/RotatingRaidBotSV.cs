@@ -12,6 +12,8 @@ using System.Net;
 using System.Net.Http;
 using System.Reflection;
 using System.Text;
+using AnimatedGif;
+using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
@@ -576,7 +578,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             {
                 Title = "Bot Reset",
                 Description = "The bot encountered an issue and is currently resetting. Please stand by.",
-                Color = Color.Red,
+                Color = Discord.Color.Red,
                 ThumbnailUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/x.png"
             };
             EchoUtil.RaidEmbed(null, "", embed);
@@ -2130,6 +2132,58 @@ namespace SysBot.Pokemon.SV.BotRaid
             return "Unknown Type";  // Return "Unknown Type" if the type doesn't exist in our dictionary
         }
 
+        private async Task<byte[]?> CaptureGifScreenshotsAsync(CancellationToken token)
+        {
+            var screenshotCount = 20;
+            var screenshotInterval = TimeSpan.FromSeconds(0 / 20);
+            var gifFrames = new List<System.Drawing.Image>();
+
+            for (int i = 0; i < screenshotCount; i++)
+            {
+                byte[] bytes;
+                try
+                {
+                    bytes = await SwitchConnection.PixelPeek(token).ConfigureAwait(false) ?? Array.Empty<byte>();
+                }
+                catch (Exception ex)
+                {
+                    Log($"Error while fetching pixels: {ex.Message}");
+                    return null;
+                }
+
+                if (bytes.Length == 0)
+                {
+                    Log("No screenshot data received.");
+                    return null;
+                }
+
+                using (var ms = new MemoryStream(bytes))
+                {
+                    using (var bitmap = new Bitmap(ms))
+                    {
+                        var frame = bitmap.Clone(new Rectangle(0, 0, bitmap.Width, bitmap.Height), System.Drawing.Imaging.PixelFormat.Format32bppArgb);
+                        gifFrames.Add(frame);
+                    }
+                }
+
+                await Task.Delay(screenshotInterval, token).ConfigureAwait(false);
+            }
+
+            using (var ms = new MemoryStream())
+            {
+                using (var gif = new AnimatedGifCreator(ms, 220))
+                {
+                    foreach (var frame in gifFrames)
+                    {
+                        gif.AddFrame(frame);
+                        frame.Dispose();
+                    }
+                }
+
+                return ms.ToArray();
+            }
+        }
+
         private async Task EnqueueEmbed(List<string>? names, string message, bool hatTrick, bool disband, bool upnext, bool raidstart, CancellationToken token)
         {
             string code = string.Empty;
@@ -2165,16 +2219,52 @@ namespace SysBot.Pokemon.SV.BotRaid
             if (disband) // Wait for trainer to load before disband
                 await Task.Delay(5_000, token).ConfigureAwait(false);
 
-            byte[]? bytes = [];
-            if (Settings.EmbedToggles.TakeScreenshot && !upnext)
+            byte[]? imageBytes = null;
+            string fileName = string.Empty;
+
+            if (!disband && names is not null && !upnext && Settings.EmbedToggles.TakeScreenshot)
+            {
                 try
                 {
-                    bytes = await SwitchConnection.PixelPeek(token).ConfigureAwait(false) ?? [];
+                    if (Settings.EmbedToggles.AnimatedScreenshot)
+                    {
+                        try
+                        {
+                            imageBytes = await Task.Run(() => CaptureGifScreenshotsAsync(token)).ConfigureAwait(false);
+                            fileName = $"raidecho{RotationCount}.gif";
+                        }
+                        catch (Exception ex)
+                        {
+                            Log($"Error while capturing GIF screenshots: {ex.Message}");
+                            Log("Falling back to standard JPG screenshot.");
+
+                            imageBytes = await SwitchConnection.PixelPeek(token).ConfigureAwait(false) ?? Array.Empty<byte>();
+                            fileName = $"raidecho{RotationCount}.jpg";
+                        }
+                    }
+                    else
+                    {
+                        imageBytes = await SwitchConnection.PixelPeek(token).ConfigureAwait(false) ?? Array.Empty<byte>();
+                        fileName = $"raidecho{RotationCount}.jpg";
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log($"Error while capturing screenshots: {ex.Message}");
+                }
+            }
+            else if (Settings.EmbedToggles.TakeScreenshot && !upnext)
+            {
+                try
+                {
+                    imageBytes = await SwitchConnection.PixelPeek(token).ConfigureAwait(false) ?? Array.Empty<byte>();
+                    fileName = $"raidecho{RotationCount}.jpg";
                 }
                 catch (Exception ex)
                 {
                     Log($"Error while fetching pixels: {ex.Message}");
                 }
+            }
 
             string disclaimer = Settings.ActiveRaids.Count > 1
                                 ? $"notpaldea.net"
@@ -2236,7 +2326,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             (int R, int G, int B) dominantColor = RaidExtensions<PK9>.GetDominantColor(turl);
 
             // Use the dominant color, unless it's a disband or hatTrick situation
-            var embedColor = disband ? Color.Red : hatTrick ? Color.Purple : new Color(dominantColor.R, dominantColor.G, dominantColor.B);
+            var embedColor = disband ? Discord.Color.Red : hatTrick ? Discord.Color.Purple : new Discord.Color(dominantColor.R, dominantColor.G, dominantColor.B);
 
             TimeSpan duration = new(0, 2, 31);
 
@@ -2255,7 +2345,8 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Title = disband ? $"**Raid canceled: [{TeraRaidCode}]**" : upnext && Settings.RaidSettings.TotalRaidsToHost != 0 ? $"Raid Ended - Preparing Next Raid!" : upnext && Settings.RaidSettings.TotalRaidsToHost == 0 ? $"Raid Ended - Preparing Next Raid!" : "",
                 Color = embedColor,
                 Description = disband ? message : upnext ? Settings.RaidSettings.TotalRaidsToHost == 0 ? $"# {Settings.ActiveRaids[RotationCount].Title}\n\n{futureTimeMessage}" : $"# {Settings.ActiveRaids[RotationCount].Title}\n\n{futureTimeMessage}" : raidstart ? "" : description,
-                ImageUrl = bytes.Length > 0 ? "attachment://zap.jpg" : default,
+                ThumbnailUrl = upnext ? turl : (imageBytes == null ? turl : null), // Set ThumbnailUrl based on upnext and imageBytes
+                ImageUrl = imageBytes != null ? $"attachment://{fileName}" : null, // Set ImageUrl based on imageBytes
             };
 
             // Only include footer if not posting 'upnext' embed with the 'Preparing Raid' title
@@ -2378,38 +2469,13 @@ namespace SysBot.Pokemon.SV.BotRaid
 
                 embed.AddField($"**Raid #{RaidCount} is starting!**", players);
             }
-            var fileName = $"raidecho{RotationCount}.jpg";
-            embed.ThumbnailUrl = turl;
-            embed.WithImageUrl($"attachment://{fileName}");
-            EchoUtil.RaidEmbed(bytes, fileName, embed);
-        }
-
-        private async Task<bool> ReconnectToOnlineAfterSeedInjection(CancellationToken token)
-        {
-            int attemptCount = 0;
-            const int maxAttempt = 5;
-
-            while (attemptCount < maxAttempt)
+            if (imageBytes != null)
             {
-                if (await IsConnectedOnline(ConnectedOffset, token).ConfigureAwait(false))
-                {
-                    Log("Reconnected to online successfully after seed injection.");
-                    return true;
-                }
-
-                attemptCount++;
-                Log($"Attempt {attemptCount} of {maxAttempt}: Trying to reconnect online after seed injection...");
-
-                // Connection attempt logic
-                await Click(X, 3_000, token).ConfigureAwait(false);
-                await Click(L, 5_000 + Hub.Config.Timings.ExtraTimeConnectOnline, token).ConfigureAwait(false);
-
-                // Wait a bit before rechecking the connection status
-                await Task.Delay(5000, token).ConfigureAwait(false);
+                embed.ThumbnailUrl = turl;
+                embed.WithImageUrl($"attachment://{fileName}");
             }
 
-            Log($"Failed to reconnect to online after {maxAttempt} attempts.");
-            return false;
+            EchoUtil.RaidEmbed(imageBytes, fileName, embed);
         }
 
         private async Task<bool> ConnectToOnline(PokeRaidHubConfig config, CancellationToken token)
@@ -2442,7 +2508,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                         {
                             Title = "Experiencing Technical Difficulties",
                             Description = "The bot is experiencing issues connecting online. Please stand by as we try to resolve the issue.",
-                            Color = Color.Red,
+                            Color = Discord.Color.Red,
                             ThumbnailUrl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/x.png"
                         };
                         EchoUtil.RaidEmbed(null, "", embed);
@@ -3521,7 +3587,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             var authorName = $"{stars} ★ {titlePrefix}{(Species)encounter.Species}{(pk.Form != 0 ? $"-{formName}" : "")}{(isEvent ? " (Event Raid)" : "")}";
 
             (int R, int G, int B) = RaidExtensions<PK9>.GetDominantColor(RaidExtensions<PK9>.PokeImg(pk, false, false));
-            var embedColor = new Color(R, G, B);
+            var embedColor = new Discord.Color(R, G, B);
 
             var embed = new EmbedBuilder
             {

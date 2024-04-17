@@ -280,6 +280,9 @@ namespace SysBot.Pokemon
             [Category(Hosting), Description("Delay in milliseconds for capturing a screenshot once in the raid.\n1500 Captures Players Only.\n9000 Captures players and Raid Mon.")]
             public ScreenshotTimingOptions ScreenshotTiming { get; set; } = ScreenshotTimingOptions._1500; // default to 1500 ms
 
+            [Category(FeatureToggle), Description("When enabled, the bot will snap an animated image (gif) of what's happening once inside the raid, instead of a standard still img.")]
+            public bool AnimatedScreenshot { get; set; } = true;
+
             [Category(FeatureToggle), Description("When enabled, the bot will hide the raid code from the Discord embed.")]
             public bool HideRaidCode { get; set; } = false;
         }
