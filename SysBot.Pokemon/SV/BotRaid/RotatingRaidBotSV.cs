@@ -2137,11 +2137,11 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task<byte[]?> CaptureGifScreenshotsAsync(CancellationToken token)
         {
-            var frameCount = 20;
+            var frameCount = Settings.EmbedToggles.Frames;
             var gifFrames = new List<System.Drawing.Image>();
             var gifWidth = 450;
             var gifHeight = 270;
-            var gifQuality = GifQuality.Bit8;
+            var gifQuality = (AnimatedGif.GifQuality)Settings.EmbedToggles.GifQuality;
             var frameDelay = 180;
 
             for (int i = 0; i < frameCount; i++)
@@ -2178,7 +2178,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             {
                 foreach (var frame in gifFrames)
                 {
-                    gif.AddFrame(frame, quality: (GifQuality)(int)gifQuality);
+                    gif.AddFrame(frame, quality: (AnimatedGif.GifQuality)(int)gifQuality);
                     frame.Dispose();
                 }
             }

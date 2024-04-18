@@ -96,6 +96,18 @@ namespace SysBot.Pokemon
         _10000 = 10000 // Everything SS
     }
 
+    public enum GifQuality
+    {
+        [Description("Default quality")]
+        Default,
+        [Description("8-bit color quality")]
+        Bit8,
+        [Description("4-bit color quality")]
+        Bit4,
+        [Description("Grayscale quality")]
+        Grayscale
+    }
+
     public enum GenderDependent : ushort
     {
         Venusaur = 3,

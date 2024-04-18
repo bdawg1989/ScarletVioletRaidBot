@@ -14,6 +14,7 @@ namespace SysBot.Pokemon
         public TimingSettings Timings { get; set; } = new();
 
         [Category(BotRaid), Description("Name of the Discord Bot the Program is Running. This will Title the window for easier recognition. Requires program restart.")]
+        [DisplayName("This Bot's Name is...")]
         public string BotName { get; set; } = string.Empty;
 
         [Browsable(false)]

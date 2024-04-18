@@ -14,25 +14,35 @@ namespace SysBot.Pokemon
         private const string Hosting = nameof(Hosting);
         private const string Counts = nameof(Counts);
         private const string FeatureToggle = nameof(FeatureToggle);
-
-        public override string ToString() => "RotatingRaidSV Settings";
+        
+        public override string ToString() => "Rotating Raid Settings (Sc/Vi Only)";
+        [DisplayName("Active Raid List")]
 
         [Category(Hosting), Description("Your Active Raid List lives here.")]
         public List<RotatingRaidParameters> ActiveRaids { get; set; } = new();
 
+        [DisplayName("Raid Settings")]
         public RotatingRaidSettingsCategory RaidSettings { get; set; } = new RotatingRaidSettingsCategory();
 
+        [DisplayName("Discord Embed Settings")]
         public RotatingRaidPresetFiltersCategory EmbedToggles { get; set; } = new RotatingRaidPresetFiltersCategory();
+
+        [DisplayName("Might/Dist Event Settings")]
 
         [Category(Hosting), Description("Settings related to Events."), Browsable(true)]
         public EventSettingsCategory EventSettings { get; set; } = new();
 
+        [DisplayName("Raid Lobby Settings")]
+
         [Category(Hosting), Description("Lobby Options"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
         public LobbyFiltersCategory LobbyOptions { get; set; } = new();
+
+        [DisplayName("Banned Raiders List")]
 
         [Category(Hosting), Description("Users NIDs here are banned raiders.")]
         public RemoteControlAccessList RaiderBanList { get; set; } = new() { AllowIfEmpty = false };
 
+        [DisplayName("Random Settings")]
         public MiscSettingsCategory MiscSettings { get; set; } = new MiscSettingsCategory();
 
         [Browsable(false)]
@@ -46,29 +56,59 @@ namespace SysBot.Pokemon
         {
             public override string ToString() => $"{Title}";
 
+            [DisplayName("Enable Raid?")]
             public bool ActiveInRotation { get; set; } = true;
-            public int DifficultyLevel { get; set; } = 0;
-            public int StoryProgressLevel { get; set; } = 5;
+
+            [DisplayName("Species")]
+            public Species Species { get; set; } = Species.None;
+
+            [DisplayName("Force Selected Species?")]
+            public bool ForceSpecificSpecies { get; set; } = false;
+
+            [DisplayName("Pokemon Form Number")]
+            public int SpeciesForm { get; set; } = 0;
+
+            [DisplayName("Is Pokemon Shiny?")]
+            public bool IsShiny { get; set; } = true;
+
+            [DisplayName("Crystal Type")]
             public TeraCrystalType CrystalType { get; set; } = TeraCrystalType.Base;
 
-            [Browsable(false)]
-            public string[] Description { get; set; } = Array.Empty<string>();
-
+            [DisplayName("Make Raid Coded?")]
             public bool IsCoded { get; set; } = true;
-            public bool IsShiny { get; set; } = true;
-            public bool ForceSpecificSpecies { get; set; } = false;
-            public Species Species { get; set; } = Species.None;
-            public int SpeciesForm { get; set; } = 0;
-            public string[] PartyPK { get; set; } = Array.Empty<string>();
-            public bool SpriteAlternateArt { get; set; } = false;
+
+            [DisplayName("Seed")]
             public string Seed { get; set; } = "0";
+
+            [DisplayName("Star Count")]
+            public int DifficultyLevel { get; set; } = 0;
+
+            [DisplayName("Game Progress")]
+            public int StoryProgressLevel { get; set; } = 5;
+
+            [DisplayName("Raid Battler (Showdown Format)")]
+            public string[] PartyPK { get; set; } = Array.Empty<string>();
+
+            [DisplayName("Action Bot Should Use")]
             public Action1Type Action1 { get; set; } = Action1Type.GoAllOut;
+
+            [DisplayName("Action Delay (In Seconds)")]
             public int Action1Delay { get; set; } = 5;
+
+            [DisplayName("Group ID  (Event Raids Only)")]
             public int GroupID { get; set; } = 0;
+
+            [DisplayName("Embed Title")]
             public string Title { get; set; } = string.Empty;
 
             [Browsable(false)]
             public bool AddedByRACommand { get; set; } = false;
+
+            [Browsable(false)]
+            public bool SpriteAlternateArt { get; set; } = false; // Not enough alt art to even turn on
+
+            [Browsable(false)]
+            public string[] Description { get; set; } = Array.Empty<string>();
 
             [Browsable(false)]
             public bool RaidUpNext { get; set; } = false;
@@ -93,6 +133,7 @@ namespace SysBot.Pokemon
         {
             public override string ToString() => "Event Settings";
 
+            [DisplayName("Are Events Active? (Paldea Only)")]
             [Category(Hosting), Description("Set to \"true\" when events are active to properly process level 7 (event) and level 5 (distribution) raids.")]
             public bool EventActive { get; set; } = false;
         }
@@ -102,51 +143,67 @@ namespace SysBot.Pokemon
         {
             public override string ToString() => "Raid Settings";
 
+            [DisplayName("Generate Active Raids from file?")]
             [Category(Hosting), Description("When enabled, the bot will attempt to auto-generate your raids from the \"raidsv.txt\" file on botstart.")]
             public bool GenerateRaidsFromFile { get; set; } = true;
 
+            [DisplayName("Save Active Raids to File On Exit?")]
             [Category(Hosting), Description("When enabled, the bot will save your current ActiveRaids list to the \"savedSeeds.txt\" file on bot stop.")]
             public bool SaveSeedsToFile { get; set; } = true;
 
+            [DisplayName("Total Raids To Host Before Stopping")]
             [Category(Hosting), Description("Enter the total number of raids to host before the bot automatically stops. Default is 0 to ignore this setting.")]
             public int TotalRaidsToHost { get; set; } = 0;
 
+            [DisplayName("Rotate Raid List in Random Order?")]
             [Category(Hosting), Description("When enabled, the bot will randomly pick a Raid to run, while keeping requests prioritized.")]
             public bool RandomRotation { get; set; } = false;
 
+            [DisplayName("Turn Mystery Raids On?")]
             [Category(Hosting), Description("When true, bot will add random shiny seeds to queue.  Only User Requests and Mystery Raids will be ran.")]
             public bool MysteryRaids { get; set; } = false;
 
+            [DisplayName("Mystery Raid Settings")]
             [Category("MysteryRaids"), Description("Settings specific to Mystery Raids.")]
             public MysteryRaidsSettings MysteryRaidsSettings { get; set; } = new MysteryRaidsSettings();
 
+            [DisplayName("Disable User Raid Requests?")]
             [Category(Hosting), Description("When true, the bot will not allow user requested raids and will inform them that this setting is on.")]
             public bool DisableRequests { get; set; } = false;
 
+            [DisplayName("Allow Private User Raid Requests?")]
             [Category(Hosting), Description("When true, the bot will allow private raids.")]
             public bool PrivateRaidsEnabled { get; set; } = true;
 
+            [DisplayName("Limit Users Requests")]
             [Category(Hosting), Description("Limit the number of requests a user can issue.  Set to 0 to disable.\nCommands: $lr <number>")]
             public int LimitRequests { get; set; } = 0;
 
+            [DisplayName("Limit Requests Time")]
             [Category(Hosting), Description("Define the time (in minutes) the user must wait for requests once LimitRequests number is reached.  Set to 0 to disable.\nCommands: $lrt <number in minutes>")]
             public int LimitRequestsTime { get; set; } = 0;
 
+            [DisplayName("Limit Request User Error Message")]
             [Category(Hosting), Description("Custom message to display when a user reaches their request limit.")]
             public string LimitRequestMsg { get; set; } = "If you'd like to bypass this limit, please [describe how to get the role].";
 
+            [DisplayName("Users/Roles that can bypass Limit Requests")]
             [Category(Hosting), Description("Dictionary of user and role IDs with names that can bypass request limits.\nCommands: $alb @Role or $alb @User")]
             public Dictionary<ulong, string> BypassLimitRequests { get; set; } = new Dictionary<ulong, string>();
 
+            [DisplayName("Prevent Battles in Overworld?")]
             [Category(FeatureToggle), Description("Prevent attacks.  When true, Overworld Spawns (Pokémon) are disabled on the next seed injection.  When false, Overworld Spawns (Pokémon) are enabled on the next seed injection.")]
             public bool DisableOverworldSpawns { get; set; } = true;
 
+            [DisplayName("Start Raid in X seconds")]
             [Category(Hosting), Description("Minimum amount of seconds to wait before starting a raid.")]
             public int TimeToWait { get; set; } = 90;
 
+            [DisplayName("Keep Current Day Seed?")]
             [Category(Hosting), Description("When enabled, the bot will inject the current day seed to tomorrow's day seed.")]
             public bool KeepDaySeed { get; set; } = true;
 
+            [DisplayName("Prevent Day Changes?")]
             [Category(FeatureToggle), Description("When enabled, the bot will roll back the time by 5 hours to keep your day from changing.  Be sure that when you start the bot the Switch Time is past 12:01am and before 7:00pm.")]
             public bool EnableTimeRollBack { get; set; } = true;
         }
@@ -178,6 +235,7 @@ namespace SysBot.Pokemon
         public class EmojiInfo
         {
             [Description("The full string for the emoji.")]
+            [DisplayName("Emoji Code")]
             public string EmojiString { get; set; } = string.Empty;
 
             public override string ToString()
@@ -192,9 +250,11 @@ namespace SysBot.Pokemon
             public override string ToString() => "Embed Toggles";
 
             [Category(Hosting), Description("Will show Move Type Icons next to moves in trade embed (Discord only).  Requires user to upload the emojis to their server.")]
+            [DisplayName("Use Move Type Emoji's?")]
             public bool MoveTypeEmojis { get; set; } = true;
 
             [Category(Hosting), Description("Custom Emoji information for the move types.")]
+            [DisplayName("Custom Move Type Emoji's")]
             public List<MoveTypeEmojiInfo> CustomTypeEmojis { get; set; } =
             [
             new(MoveType.Bug),
@@ -217,34 +277,44 @@ namespace SysBot.Pokemon
             new(MoveType.Fairy),
             ];
 
-            [Category(Hosting), Description("The full string for the male gender emoji.")]
+            [Category(Hosting), Description("The full string for the male gender emoji. Leave blank to not use.")]
+            [DisplayName("Male Emoji Code")]
             public EmojiInfo MaleEmoji { get; set; } = new EmojiInfo();
 
-            [Category(Hosting), Description("The full string for the female gender emoji.")]
+            [Category(Hosting), Description("The full string for the female gender emoji. Leave blank to not use.")]
+            [DisplayName("Female Emoji Code")]
             public EmojiInfo FemaleEmoji { get; set; } = new EmojiInfo();
 
-            [Category(Hosting), Description("Raid embed description.")]
+            [Category(Hosting), Description("Raid embed description will be shown on every raid posted at the top of the embed.")]
+            [DisplayName("Raid Embed Description")]
             public string[] RaidEmbedDescription { get; set; } = Array.Empty<string>();
 
             [Category(FeatureToggle), Description("Choose the TeraType Icon set to use in the author area of the embed.  Icon1 are custom, Icon2 is not.")]
+            [DisplayName("Tera Icon Choice")]
             public TeraIconType SelectedTeraIconType { get; set; } = TeraIconType.Icon1;
 
             [Category(Hosting), Description("If true, the bot will show Moves on embeds.")]
+            [DisplayName("Include Moves/Extra Moves in Embed?")]
             public bool IncludeMoves { get; set; } = true;
 
             [Category(Hosting), Description("When true, the embed will display current seed.")]
+            [DisplayName("Include Current Seed in Embed?")]
             public bool IncludeSeed { get; set; } = true;
 
             [Category(FeatureToggle), Description("When enabled, the embed will countdown the amount of seconds in \"TimeToWait\" until starting the raid.")]
+            [DisplayName("Include Countdown Timer in Embed?")]
             public bool IncludeCountdown { get; set; } = true;
 
             [Category(Hosting), Description("If true, the bot will show Type Advantages on embeds.")]
+            [DisplayName("Include Type Advantage Hints in Embed?")]
             public bool IncludeTypeAdvantage { get; set; } = true;
 
             [Category(Hosting), Description("If true, the bot will show Special Rewards on embeds.")]
+            [DisplayName("Include Rewards in Embed?")]
             public bool IncludeRewards { get; set; } = true;
 
             [Category(Hosting), Description("Select which rewards to display in the embed.")]
+            [DisplayName("Rewards To Show")]
             public List<string> RewardsToShow { get; set; } = new List<string>
             {
                 "Rare Candy",
@@ -272,16 +342,28 @@ namespace SysBot.Pokemon
             };
 
             [Category(Hosting), Description("Amount of time (in seconds) to post a requested raid embed.")]
+            [DisplayName("Post User Request Embeds in...")]
             public int RequestEmbedTime { get; set; } = 30;
 
             [Category(FeatureToggle), Description("When enabled, the bot will attempt take screenshots for the Raid Embeds. If you experience crashes often about \"Size/Parameter\" try setting this to false.")]
+            [DisplayName("Use Screenshots?")]
             public bool TakeScreenshot { get; set; } = true;
 
             [Category(Hosting), Description("Delay in milliseconds for capturing a screenshot once in the raid.\n 0 Captures the Raid Mon Up close.\n3500 Captures Players Only.\n10000 Captures players and Raid Mon.")]
+            [DisplayName("Screenshot Timing (Non Gif Imgs)")]
             public ScreenshotTimingOptions ScreenshotTiming { get; set; } = ScreenshotTimingOptions._3500;
 
             [Category(FeatureToggle), Description("When enabled, the bot will snap an animated image (gif) of what's happening once inside the raid, instead of a standard still img.")]
+            [DisplayName("Use Gif Screenshots?")]
             public bool AnimatedScreenshot { get; set; } = true;
+
+            [Category(FeatureToggle), Description("Amount of frames to capture for the embed.  20-30 is a good number.")]
+            [DisplayName("Frames to Capture (Gif's Only)")]
+            public int Frames { get; set; } = 30;
+
+            [Category(FeatureToggle), Description("Quality of the GIF. Higher quality means larger file size.")]
+            [DisplayName("GIF Quality")]
+            public GifQuality GifQuality { get; set; } = GifQuality.Default;
 
             [Category(FeatureToggle), Description("When enabled, the bot will hide the raid code from the Discord embed.")]
             public bool HideRaidCode { get; set; } = false;
@@ -291,15 +373,19 @@ namespace SysBot.Pokemon
         public class MysteryRaidsSettings
         {
             [TypeConverter(typeof(ExpandableObjectConverter))]
+            [DisplayName("3 Star Progress Settings")]
             public Unlocked3StarSettings Unlocked3StarSettings { get; set; } = new Unlocked3StarSettings();
 
             [TypeConverter(typeof(ExpandableObjectConverter))]
+            [DisplayName("4 Star Progress Settings")]
             public Unlocked4StarSettings Unlocked4StarSettings { get; set; } = new Unlocked4StarSettings();
 
             [TypeConverter(typeof(ExpandableObjectConverter))]
+            [DisplayName("5 Star Progress Settings")]
             public Unlocked5StarSettings Unlocked5StarSettings { get; set; } = new Unlocked5StarSettings();
 
             [TypeConverter(typeof(ExpandableObjectConverter))]
+            [DisplayName("6 Star Progress Settings")]
             public Unlocked6StarSettings Unlocked6StarSettings { get; set; } = new Unlocked6StarSettings();
 
             public override string ToString() => "Mystery Raids Settings";
@@ -307,6 +393,7 @@ namespace SysBot.Pokemon
 
         public class Unlocked3StarSettings
         {
+            [DisplayName("Enable 3 Star Progress Mystery Raids?")]
             public bool Enabled { get; set; } = true;
 
             [Category("DifficultyLevels"), Description("Allow 1* Raids in 3* Unlocked Raids.")]
@@ -323,6 +410,7 @@ namespace SysBot.Pokemon
 
         public class Unlocked4StarSettings
         {
+            [DisplayName("Enable 4 Star Progress Mystery Raids?")]
             public bool Enabled { get; set; } = true;
 
             [Category("DifficultyLevels"), Description("Allow 1* Raids in 4* Unlocked Raids.")]
@@ -343,6 +431,7 @@ namespace SysBot.Pokemon
         [Category("MysteryRaids"), TypeConverter(typeof(ExpandableObjectConverter))]
         public class Unlocked5StarSettings
         {
+            [DisplayName("Enable 5 Star Progress Mystery Raids?")]
             public bool Enabled { get; set; } = true;
 
             [Category("DifficultyLevels"), Description("Allow 3* Raids in 5* Unlocked Raids.")]
@@ -360,6 +449,7 @@ namespace SysBot.Pokemon
         [Category("MysteryRaids"), TypeConverter(typeof(ExpandableObjectConverter))]
         public class Unlocked6StarSettings
         {
+            [DisplayName("Enable 6 Star Progress Mystery Raids?")]
             public bool Enabled { get; set; } = true;
 
             [Category("DifficultyLevels"), Description("Allow 3* Raids in 6* Unlocked Raids.")]
@@ -383,24 +473,31 @@ namespace SysBot.Pokemon
             public override string ToString() => "Lobby Filters";
 
             [Category(Hosting), Description("OpenLobby - Opens the Lobby after x Empty Lobbies\nSkipRaid - Moves on after x losses/empty Lobbies\nContinue - Continues hosting the raid")]
+            [DisplayName("Lobby Method")]
             public LobbyMethodOptions LobbyMethod { get; set; } = LobbyMethodOptions.SkipRaid; // Changed the property name here
 
             [Category(Hosting), Description("Empty raid limit per parameter before the bot hosts an uncoded raid. Default is 3 raids.")]
+            [DisplayName("Empty Raid Limit")]
             public int EmptyRaidLimit { get; set; } = 3;
 
             [Category(Hosting), Description("Empty/Lost raid limit per parameter before the bot moves on to the next one. Default is 3 raids.")]
+            [DisplayName("Skip Raid Limit")]
             public int SkipRaidLimit { get; set; } = 3;
 
-            [Category(FeatureToggle), Description("Set the action you would want your bot to perform. 'AFK' will make the bot idle, while 'MashA' presses A every 2.5s")]
+            [Category(FeatureToggle), Description("Set the action you would want your bot to perform. 'AFK' will make the bot idle, while 'MashA' presses A every 3.5s")]
+            [DisplayName("A Button Action")]
             public RaidAction Action { get; set; } = RaidAction.MashA;
 
             [Category(FeatureToggle), Description("Delay for the 'MashA' action in seconds.  [3.5 is default]")]
+            [DisplayName("A Button Delay (Seconds)")]
             public double MashADelay { get; set; } = 3.5;  // Default value set to 3.5 seconds
 
             [Category(FeatureToggle), Description("Extra time in milliseconds to wait after Lobby Disbands in Raid before deciding to not capture the raidmon.")]
+            [DisplayName("Extra Time To Disband Raid")]
             public int ExtraTimeLobbyDisband { get; set; } = 0;
 
             [Category(FeatureToggle), Description("Extra time in milliseconds to wait before changing partypk.")]
+            [DisplayName("Extra Time to Prepare Raid Battler")]
             public int ExtraTimePartyPK { get; set; } = 0;
         }
 
