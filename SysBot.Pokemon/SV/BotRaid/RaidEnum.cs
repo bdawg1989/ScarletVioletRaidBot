@@ -41,6 +41,14 @@ namespace SysBot.Pokemon
         None = 6,
     }
 
+    public enum GameProgressEnum
+    {
+        Unlocked3Stars = 2,
+        Unlocked4Stars = 3,
+        Unlocked5Stars = 4,
+        Unlocked6Stars = 5,
+    }
+
     public enum EmbedColorOption
     {
         Blue,

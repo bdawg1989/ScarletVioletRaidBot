@@ -84,10 +84,11 @@ namespace SysBot.Pokemon
             public int DifficultyLevel { get; set; } = 0;
 
             [DisplayName("Game Progress")]
-            public int StoryProgressLevel { get; set; } = 5;
+            [TypeConverter(typeof(EnumConverter))]
+            public GameProgressEnum StoryProgress { get; set; } = GameProgressEnum.Unlocked6Stars;
 
             [DisplayName("Raid Battler (Showdown Format)")]
-            public string[] PartyPK { get; set; } = Array.Empty<string>();
+            public string[] PartyPK { get; set; } = [];
 
             [DisplayName("Action Bot Should Use")]
             public Action1Type Action1 { get; set; } = Action1Type.GoAllOut;
@@ -108,7 +109,7 @@ namespace SysBot.Pokemon
             public bool SpriteAlternateArt { get; set; } = false; // Not enough alt art to even turn on
 
             [Browsable(false)]
-            public string[] Description { get; set; } = Array.Empty<string>();
+            public string[] Description { get; set; } = [];
 
             [Browsable(false)]
             public bool RaidUpNext { get; set; } = false;
@@ -141,6 +142,9 @@ namespace SysBot.Pokemon
         [Category(Hosting), TypeConverter(typeof(CategoryConverter<RotatingRaidSettingsCategory>))]
         public class RotatingRaidSettingsCategory
         {
+            private bool _randomRotation = false;
+            private bool _mysteryRaids = false;
+
             public override string ToString() => "Raid Settings";
 
             [DisplayName("Generate Active Raids from file?")]
@@ -155,13 +159,29 @@ namespace SysBot.Pokemon
             [Category(Hosting), Description("Enter the total number of raids to host before the bot automatically stops. Default is 0 to ignore this setting.")]
             public int TotalRaidsToHost { get; set; } = 0;
 
-            [DisplayName("Rotate Raid List in Random Order?")]
-            [Category(Hosting), Description("When enabled, the bot will randomly pick a Raid to run, while keeping requests prioritized.")]
-            public bool RandomRotation { get; set; } = false;
+            [DisplayName("Rotate Raid List in Random Order?"), Category(Hosting), Description("When enabled, the bot will randomly pick a Raid to run, while keeping requests prioritized.")]
+            public bool RandomRotation
+            {
+                get => _randomRotation;
+                set
+                {
+                    _randomRotation = value;
+                    if (value)
+                        _mysteryRaids = false;
+                }
+            }
 
-            [DisplayName("Turn Mystery Raids On?")]
-            [Category(Hosting), Description("When true, bot will add random shiny seeds to queue.  Only User Requests and Mystery Raids will be ran.")]
-            public bool MysteryRaids { get; set; } = false;
+            [DisplayName("Turn Mystery Raids On?"), Category(Hosting), Description("When true, bot will add random shiny seeds to queue. Only User Requests and Mystery Raids will be ran.")]
+            public bool MysteryRaids
+            {
+                get => _mysteryRaids;
+                set
+                {
+                    _mysteryRaids = value;
+                    if (value)
+                        _randomRotation = false;
+                }
+            }
 
             [DisplayName("Mystery Raid Settings")]
             [Category("MysteryRaids"), Description("Settings specific to Mystery Raids.")]

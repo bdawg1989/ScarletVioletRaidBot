@@ -242,10 +242,10 @@ namespace SysBot.Pokemon.SV.BotRaid
             foreach (var raid in raidsToSave)
             {
                 // Increment the StoryProgressLevel by 1 before saving
-                int incrementedStoryProgressLevel = raid.StoryProgressLevel + 1;
+                int storyProgressValue = (int)raid.StoryProgress;
 
                 // Build the string to save, including the incremented StoryProgressLevel
-                sb.Append($"{raid.Seed}-{raid.Species}-{raid.DifficultyLevel}-{incrementedStoryProgressLevel},");
+                sb.Append($"{raid.Seed}-{raid.Species}-{raid.DifficultyLevel}-{storyProgressValue}");
             }
 
             // Remove the trailing comma at the end
@@ -315,8 +315,8 @@ namespace SysBot.Pokemon.SV.BotRaid
                     Species = RaidExtensions<PK9>.EnumParse<Species>(montitle),
                     CrystalType = type,
                     PartyPK = [data],
-                    DifficultyLevel = difficultyLevel,  // Set the DifficultyLevel
-                    StoryProgressLevel = convertedStoryProgressLevel  // Set the converted StoryProgressLevel
+                    DifficultyLevel = difficultyLevel,
+                    StoryProgress = (GameProgressEnum)convertedStoryProgressLevel
                 };
 
                 // Add the RotatingRaidParameters object to the ActiveRaids list
@@ -1032,7 +1032,14 @@ namespace SysBot.Pokemon.SV.BotRaid
             var speciesName = Settings.ActiveRaids[RotationCount].Species.ToString();
             var groupID = Settings.ActiveRaids[RotationCount].GroupID;
             var denLocations = LoadDenLocations("SysBot.Pokemon.SV.BotRaid.DenLocations.den_locations_base.json");
-            string denIdentifier = null;
+            string? denIdentifier = null;
+
+            // Check if the user is not in Paldea and adjust the crystal type accordingly
+            if ((IsKitakami || IsBlueberry) && (crystalType == TeraCrystalType.Might || crystalType == TeraCrystalType.Distribution))
+            {
+                crystalType = TeraCrystalType.Black;
+                Log("User is not in Paldea. Setting crystal type to Black.");
+            }
 
             if (crystalType == TeraCrystalType.Might || crystalType == TeraCrystalType.Distribution)
             {
@@ -1202,7 +1209,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Title = "Mystery Shiny Raid",
                 AddedByRACommand = true,
                 DifficultyLevel = randomDifficultyLevel,
-                StoryProgressLevel = (int)gameProgress,
+                StoryProgress = (GameProgressEnum)gameProgress,
                 CrystalType = crystalType,
                 IsShiny = true
             };
@@ -2416,8 +2423,8 @@ namespace SysBot.Pokemon.SV.BotRaid
                 if (Settings.EmbedToggles.IncludeSeed)
                 {
                     // Increment StoryProgressLevel by 1
-                    int incrementedStoryProgressLevel = Settings.ActiveRaids[RotationCount].StoryProgressLevel + 1;
-                    statsField.AppendLine($"**Seed**: `{Settings.ActiveRaids[RotationCount].Seed} {Settings.ActiveRaids[RotationCount].DifficultyLevel} {incrementedStoryProgressLevel}`");
+                    int storyProgressValue = (int)Settings.ActiveRaids[RotationCount].StoryProgress;
+                    statsField.AppendLine($"**Seed**: `{Settings.ActiveRaids[RotationCount].Seed} {Settings.ActiveRaids[RotationCount].DifficultyLevel} {storyProgressValue}`");
                 }
 
                 embed.AddField("**__Stats__**", statsField.ToString(), true);
@@ -2624,12 +2631,12 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Log($"Rotation for {Settings.ActiveRaids[RotationCount].Species} has been found.");
                 Log($"Checking Current Game Progress Level.");
 
-                var desiredProgress = (GameProgress)Settings.ActiveRaids[RotationCount].StoryProgressLevel;
-                if (GameProgress != desiredProgress)
+                var desiredProgress = Settings.ActiveRaids[RotationCount].StoryProgress;
+                if (GameProgress != (GameProgress)desiredProgress)
                 {
                     Log($"Updating game progress level to: {desiredProgress}");
-                    await WriteProgressLive(desiredProgress).ConfigureAwait(false);
-                    GameProgress = desiredProgress;
+                    await WriteProgressLive((GameProgress)desiredProgress).ConfigureAwait(false);
+                    GameProgress = (GameProgress)desiredProgress;
                     Log($"Done.");
                 }
                 else

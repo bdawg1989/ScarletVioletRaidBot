@@ -50,7 +50,9 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             var compatible = CheckProgressandLevel(level, storyProgressLevel);
             if (!compatible)
             {
-                await ReplyAsync($"Raid Difficulty requires a {GetRequiredProgress(level)}.").ConfigureAwait(false);
+                string requiredProgress = GetRequiredProgress(level);
+                await ReplyAsync($"The selected raid difficulty level ({level}★) is not compatible with your current story progress. " +
+                                 $"To access {level}★ raids, you need to have at least {requiredProgress} in the game's story.").ConfigureAwait(false);
                 return;
             }
 
@@ -400,7 +402,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 PartyPK = new[] { "" },
                 Species = (Species)pk.Species,
                 SpeciesForm = pk.Form,
-                StoryProgressLevel = (int)gameProgress,
+                StoryProgress = (GameProgressEnum)gameProgress,
                 Seed = seed,
                 IsCoded = true,
                 IsShiny = pk.IsShiny,
@@ -442,7 +444,9 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             var compatible = CheckProgressandLevel(level, storyProgressLevel);
             if (!compatible)
             {
-                await ReplyAsync($"Raid Difficulty requires a {GetRequiredProgress(level)}.").ConfigureAwait(false);
+                string requiredProgress = GetRequiredProgress(level);
+                await ReplyAsync($"The selected raid difficulty level ({level}★) is not compatible with your current story progress. " +
+                                 $"To access {level}★ raids, you need to have at least {requiredProgress} in the game's story.").ConfigureAwait(false);
                 return;
             }
 
@@ -587,7 +591,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 Species = (Species)pk.Species,
                 DifficultyLevel = level,
                 SpeciesForm = pk.Form,
-                StoryProgressLevel = (int)gameProgress,
+                StoryProgress = (GameProgressEnum)gameProgress,
                 Seed = seed,
                 IsCoded = true,
                 IsShiny = pk.IsShiny,
