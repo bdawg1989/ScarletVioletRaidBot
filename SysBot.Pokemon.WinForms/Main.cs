@@ -264,6 +264,20 @@ namespace SysBot.Pokemon.WinForms
             });
         }
 
+        private async void Updater_Click(object sender, EventArgs e)
+        {
+            var (updateAvailable, updateRequired, newVersion) = await UpdateChecker.CheckForUpdatesAsync();
+            if (updateAvailable)
+            {
+                UpdateForm updateForm = new UpdateForm(updateRequired, newVersion);
+                updateForm.ShowDialog();
+            }
+            else
+            {
+                MessageBox.Show("No updates are available.", "Update Check", MessageBoxButtons.OK, MessageBoxIcon.Information);
+            }
+        }
+
         private void RefreshMap_Click(object sender, EventArgs e)
         { 
             SaveCurrentConfig();
@@ -455,7 +469,7 @@ namespace SysBot.Pokemon.WinForms
             Color StartGreen = Color.FromArgb(10, 74, 27);// Start Button
             Color StopRed = Color.FromArgb(74, 10, 10);// Stop Button
             Color RebootBlue = Color.FromArgb(10, 35, 74);// Reboot Button
-
+            Color RefreshMap = Color.FromArgb(245, 245, 220);// Refresh Map Button
             // Set the background color of the form
             BackColor = ElegantWhite;
 
@@ -514,6 +528,9 @@ namespace SysBot.Pokemon.WinForms
 
             B_RebootReset.BackColor = RebootBlue;
             B_RebootReset.ForeColor = ElegantWhite;
+
+            B_RefreshMap.BackColor = RefreshMap;
+            B_RefreshMap.ForeColor = StartGreen;
         }
 
         private void ApplyGengarTheme()
@@ -528,6 +545,7 @@ namespace SysBot.Pokemon.WinForms
             Color StartGreen = Color.FromArgb(10, 74, 27);// Start Button
             Color StopRed = Color.FromArgb(74, 10, 10);// Stop Button
             Color RebootBlue = Color.FromArgb(10, 35, 74);// Reboot Button
+            Color RefreshMap = Color.FromArgb(245, 245, 220);// Refresh Map Button
 
             // Set the background color of the form
             BackColor = MidnightBlack;
@@ -587,6 +605,9 @@ namespace SysBot.Pokemon.WinForms
 
             B_RebootReset.BackColor = RebootBlue;
             B_RebootReset.ForeColor = ElegantWhite;
+
+            B_RefreshMap.BackColor = RefreshMap;
+            B_RefreshMap.ForeColor = StartGreen;
         }
 
         private void ApplyLightTheme()
@@ -599,7 +620,7 @@ namespace SysBot.Pokemon.WinForms
             Color StartGreen = Color.FromArgb(10, 74, 27);// Start Button
             Color StopRed = Color.FromArgb(74, 10, 10);// Stop Button
             Color RebootBlue = Color.FromArgb(10, 35, 74);// Reboot Button
-
+            Color RefreshMap = Color.FromArgb(245, 245, 220);// Refresh Map Button
             // Set the background color of the form
             BackColor = GentleGrey;
 
@@ -658,6 +679,9 @@ namespace SysBot.Pokemon.WinForms
 
             B_RebootReset.BackColor = RebootBlue;
             B_RebootReset.ForeColor = ElegantWhite;
+
+            B_RefreshMap.BackColor = RefreshMap;
+            B_RefreshMap.ForeColor = StartGreen;
         }
 
         private void ApplyPokemonTheme()
@@ -672,7 +696,7 @@ namespace SysBot.Pokemon.WinForms
             Color StartGreen = Color.FromArgb(10, 74, 27);// Start Button
             Color StopRed = Color.FromArgb(74, 10, 10);// Stop Button
             Color RebootBlue = Color.FromArgb(10, 35, 74);// Reboot Button
-
+            Color RefreshMap = Color.FromArgb(245, 245, 220);// Refresh Map Button
             // Set the background color of the form
             BackColor = SleekGrey;
 
@@ -731,6 +755,9 @@ namespace SysBot.Pokemon.WinForms
 
             B_RebootReset.BackColor = RebootBlue;
             B_RebootReset.ForeColor = ElegantWhite;
+
+            B_RefreshMap.BackColor = RefreshMap;
+            B_RefreshMap.ForeColor = StartGreen;
         }
 
         private void ApplyDarkTheme()
@@ -744,7 +771,7 @@ namespace SysBot.Pokemon.WinForms
             Color StartGreen = Color.FromArgb(10, 74, 27);// Start Button
             Color StopRed = Color.FromArgb(74, 10, 10);// Stop Button
             Color RebootBlue = Color.FromArgb(10, 35, 74);// Reboot Button
-
+            Color RefreshMap = Color.FromArgb(245, 245, 220);// Refresh Map Button
             // Set the background color of the form
             BackColor = DarkGrey;
 
@@ -803,6 +830,9 @@ namespace SysBot.Pokemon.WinForms
 
             B_RebootReset.BackColor = RebootBlue;
             B_RebootReset.ForeColor = ElegantWhite;
+
+            B_RefreshMap.BackColor = RefreshMap;
+            B_RefreshMap.ForeColor = StartGreen;
         }
     }
 }
