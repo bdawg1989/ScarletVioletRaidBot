@@ -28,7 +28,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private readonly RotatingRaidSettingsSV Settings;
         private RemoteControlAccessList RaiderBanList => Settings.RaiderBanList;
         public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap = [];
-        
+
 
         public RotatingRaidBotSV(PokeBotState cfg, PokeRaidHub<PK9> hub) : base(cfg)
         {
@@ -468,7 +468,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Directory.Delete("cache", true);
             }
             catch (Exception)
-            {}
+            { }
             Settings.ActiveRaids.RemoveAll(p => p.AddedByRACommand);
             Settings.ActiveRaids.RemoveAll(p => p.Title == "Mystery Shiny Raid");
             await CleanExit(CancellationToken.None).ConfigureAwait(false);
@@ -1483,40 +1483,6 @@ namespace SysBot.Pokemon.SV.BotRaid
             return -1;
         }
 
-        private void DisableMysteryRaidsIfEventActive()
-        {
-            if (Settings.EventSettings.EventActive)
-            {
-                bool settingsChanged = false;
-
-                // Check and update settings for 3-star raids
-                if (Settings.RaidSettings.MysteryRaidsSettings.Unlocked3StarSettings.Enabled)
-                {
-                    Settings.RaidSettings.MysteryRaidsSettings.Unlocked3StarSettings.Enabled = false;
-                    settingsChanged = true;
-                }
-
-                // Check and update settings for 4-star raids
-                if (Settings.RaidSettings.MysteryRaidsSettings.Unlocked4StarSettings.Enabled)
-                {
-                    Settings.RaidSettings.MysteryRaidsSettings.Unlocked4StarSettings.Enabled = false;
-                    settingsChanged = true;
-                }
-
-                // Check and update settings for 5-star raids
-                if (Settings.RaidSettings.MysteryRaidsSettings.Unlocked5StarSettings.Enabled)
-                {
-                    Settings.RaidSettings.MysteryRaidsSettings.Unlocked5StarSettings.Enabled = false;
-                    settingsChanged = true;
-                }
-
-                if (settingsChanged)
-                {
-                    Log("Mystery Raids for 3, 4, and 5 stars have been disabled due to an active event.");
-                }
-            }
-        }
-
         private void ProcessRandomRotation()
         {
             // Turn off RandomRotation if both RandomRotation and MysteryRaid are true
@@ -2422,8 +2388,14 @@ namespace SysBot.Pokemon.SV.BotRaid
 
                 if (Settings.EmbedToggles.IncludeSeed)
                 {
-                    // Increment StoryProgressLevel by 1
-                    int storyProgressValue = (int)Settings.ActiveRaids[RotationCount].StoryProgress;
+                    var storyProgressValue = Settings.ActiveRaids[RotationCount].StoryProgress switch
+                    {
+                        GameProgressEnum.Unlocked6Stars => 6,
+                        GameProgressEnum.Unlocked5Stars => 5,
+                        GameProgressEnum.Unlocked4Stars => 4,
+                        GameProgressEnum.Unlocked3Stars => 3,
+                        _ => 1,
+                    };
                     statsField.AppendLine($"**Seed**: `{Settings.ActiveRaids[RotationCount].Seed} {Settings.ActiveRaids[RotationCount].DifficultyLevel} {storyProgressValue}`");
                 }
 
@@ -2695,18 +2667,35 @@ namespace SysBot.Pokemon.SV.BotRaid
             for (int i = 0; i < 8; i++)
                 await Click(A, 1_000, token).ConfigureAwait(false);
 
-            var timer = 60_000;
-            while (!await IsOnOverworldTitle(token).ConfigureAwait(false))
+            var timeout = TimeSpan.FromMinutes(1);
+            var delayTask = Task.Delay(timeout, token);
+
+            while (true)
             {
-                await Task.Delay(1_000, token).ConfigureAwait(false);
-                timer -= 1_000;
-                if (timer <= 0 && !timing.RestartGameSettings.AvoidSystemUpdate)
+                var isOnOverworldTitleTask = IsOnOverworldTitle(token);
+
+                // Wait for either the delay task or the isOnOverworldTitle task to complete
+                var completedTask = await Task.WhenAny(isOnOverworldTitleTask, delayTask).ConfigureAwait(false);
+
+                if (completedTask == isOnOverworldTitleTask)
                 {
-                    Log("Still not in the game, initiating rescue protocol!");
-                    while (!await IsOnOverworldTitle(token).ConfigureAwait(false))
-                        await Click(A, 6_000, token).ConfigureAwait(false);
-                    break;
+                    // If the task that completed is the isOnOverworldTitleTask, check its result
+                    if (await isOnOverworldTitleTask.ConfigureAwait(false))
+                    {
+                        // If we are on the overworld title, exit the loop
+                        break;
+                    }
                 }
+                else
+                {
+                    // If the delayTask completed first, initiate the reboot protocol
+                    Log("Still not in the game, initiating reboot protocol!");
+                    await PerformRebootAndReset(token);
+                    return;
+                }
+
+                // Add a small delay before the next check to avoid tight looping
+                await Task.Delay(1_000, token).ConfigureAwait(false);
             }
 
             await Task.Delay(5_000 + timing.ExtraTimeLoadOverworld, token).ConfigureAwait(false);
@@ -2735,9 +2724,9 @@ namespace SysBot.Pokemon.SV.BotRaid
             return JsonConvert.DeserializeObject<Dictionary<string, float[]>>(json);
         }
 
-        private string FindNearestLocation((float, float, float) playerLocation, Dictionary<string, float[]> denLocations)
+        private static string FindNearestLocation((float, float, float) playerLocation, Dictionary<string, float[]> denLocations)
         {
-            string nearestDen = null;
+            string? nearestDen = null;
             float minDistance = float.MaxValue;
 
             foreach (var den in denLocations)
@@ -2766,7 +2755,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private async Task<(float, float, float)> GetPlayersLocation(CancellationToken token)
         {
             // Read the data block (automatically handles encryption)
-            var data = (byte[])await ReadBlock(RaidDataBlocks.KCoordinates, token);
+            var data = await ReadBlock(RaidDataBlocks.KCoordinates, token) as byte[];
 
             // Extract coordinates
             float x = BitConverter.ToSingle(data, 0);
@@ -2793,7 +2782,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             // Write the coordinates
             var teleportBlock = RaidDataBlocks.KCoordinates;
             teleportBlock.Size = coordinatesData.Length;
-            var currentCoordinateData = (byte[])await ReadBlock(teleportBlock, token);
+            var currentCoordinateData = await ReadBlock(teleportBlock, token) as byte[];
             _ = await WriteEncryptedBlockSafe(teleportBlock, currentCoordinateData, coordinatesData, token);
 
             // Set rotation to face North
@@ -2812,7 +2801,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             // Write the rotation
             var rotationBlock = RaidDataBlocks.KPlayerRotation;
             rotationBlock.Size = rotationData.Length;
-            var currentRotationData = (byte[])await ReadBlock(rotationBlock, token);
+            var currentRotationData = await ReadBlock(rotationBlock, token) as byte[];
             _ = await WriteEncryptedBlockSafe(rotationBlock, currentRotationData, rotationData, token);
         }
 
@@ -3424,12 +3413,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                         // Area Text
                         var areaText = $"{Areas.GetArea((int)(allRaids[i].Area - 1), allRaids[i].MapParent)} - Den {allRaids[i].Den}";
                         Log($"Seed {seed:X8} found for {(Species)allEncounters[i].Species} in {areaText}");
-
-                        if (!Settings.ActiveRaids[a].ForceSpecificSpecies)
-                        {
-                            Settings.ActiveRaids[a].Species = (Species)allEncounters[i].Species;
-                            Settings.ActiveRaids[a].SpeciesForm = allEncounters[i].Form;
-                        }
                     }
                 }
             }

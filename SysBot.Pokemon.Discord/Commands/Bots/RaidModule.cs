@@ -88,12 +88,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 _ => throw new ArgumentException("Invalid difficulty level.")
             };
 
-            if (isEvent && !settings.EventSettings.EventActive)
-            {
-                await ReplyAsync("Sorry, but the Event Setting is turned off at this time or there are no Events active.").ConfigureAwait(false);
-                return;
-            }
-
             try
             {
                 var rewardsToShow = settings.EmbedToggles.RewardsToShow;
@@ -367,12 +361,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
 
-            if (isEvent && !settings.EventSettings.EventActive)
-            {
-                await ReplyAsync("Sorry, but the Event Setting is turned off at this time or there are no Events active.").ConfigureAwait(false);
-                return;
-            }
-
             var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
             var rewardsToShow = settings.EmbedToggles.RewardsToShow;
             var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, settings.EmbedToggles.MoveTypeEmojis, settings.EmbedToggles.CustomTypeEmojis);
@@ -552,16 +540,6 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 return;
             }
 
-            if (isEvent && !settings.EventSettings.EventActive)
-            {
-                await ReplyAsync("Sorry, but the Event Setting is turned off at this time or there are no Events active.").ConfigureAwait(false);
-                return;
-            }
-            if (settings.EventSettings.EventActive && storyProgressLevel != 6)
-            {
-                await ReplyAsync("Currently only Story Progress Level 6 (6* Unlocked) is allowed due to Active Event Settings.").ConfigureAwait(false);
-                return;
-            }
             int effectiveQueuePosition = 1;
             var rewardsToShow = settings.EmbedToggles.RewardsToShow;
             var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, settings.EmbedToggles.MoveTypeEmojis, settings.EmbedToggles.CustomTypeEmojis, effectiveQueuePosition);

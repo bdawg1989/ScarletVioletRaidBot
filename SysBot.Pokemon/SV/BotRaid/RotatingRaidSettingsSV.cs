@@ -27,11 +27,6 @@ namespace SysBot.Pokemon
         [DisplayName("Discord Embed Settings")]
         public RotatingRaidPresetFiltersCategory EmbedToggles { get; set; } = new RotatingRaidPresetFiltersCategory();
 
-        [DisplayName("Might/Dist Event Settings")]
-
-        [Category(Hosting), Description("Settings related to Events."), Browsable(true)]
-        public EventSettingsCategory EventSettings { get; set; } = new();
-
         [DisplayName("Raid Lobby Settings")]
 
         [Category(Hosting), Description("Lobby Options"), DesignerSerializationVisibility(DesignerSerializationVisibility.Content)]
@@ -127,16 +122,6 @@ namespace SysBot.Pokemon
             [Browsable(false)]
             [System.Text.Json.Serialization.JsonIgnore]
             public List<SocketUser> MentionedUsers { get; set; } = [];
-        }
-
-        [Category(Hosting), TypeConverter(typeof(CategoryConverter<EventSettingsCategory>))]
-        public class EventSettingsCategory
-        {
-            public override string ToString() => "Event Settings";
-
-            [DisplayName("Are Events Active? (Paldea Only)")]
-            [Category(Hosting), Description("Set to \"true\" when events are active to properly process level 7 (event) and level 5 (distribution) raids.")]
-            public bool EventActive { get; set; } = false;
         }
 
         [Category(Hosting), TypeConverter(typeof(CategoryConverter<RotatingRaidSettingsCategory>))]
