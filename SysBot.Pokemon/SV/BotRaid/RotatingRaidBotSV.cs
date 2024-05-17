@@ -2394,7 +2394,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                         GameProgressEnum.Unlocked5Stars => 5,
                         GameProgressEnum.Unlocked4Stars => 4,
                         GameProgressEnum.Unlocked3Stars => 3,
-                        _ => 1,
+                        _ => 6,
                     };
                     statsField.AppendLine($"**Seed**: `{Settings.ActiveRaids[RotationCount].Seed} {Settings.ActiveRaids[RotationCount].DifficultyLevel} {storyProgressValue}`");
                 }
