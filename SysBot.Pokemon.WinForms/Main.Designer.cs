@@ -73,7 +73,7 @@ namespace SysBot.Pokemon.WinForms
             TC_Main.Name = "TC_Main";
             TC_Main.Padding = new Point(20, 7);
             TC_Main.SelectedIndex = 0;
-            TC_Main.Size = new Size(717, 509);
+            TC_Main.Size = new Size(773, 519);
             TC_Main.TabIndex = 3;
             // 
             // Tab_Bots
@@ -87,7 +87,7 @@ namespace SysBot.Pokemon.WinForms
             Tab_Bots.Controls.Add(B_New);
             Tab_Bots.Location = new Point(4, 34);
             Tab_Bots.Name = "Tab_Bots";
-            Tab_Bots.Size = new Size(812, 471);
+            Tab_Bots.Size = new Size(765, 481);
             Tab_Bots.TabIndex = 0;
             Tab_Bots.Text = "Bots";
             // 
@@ -123,7 +123,7 @@ namespace SysBot.Pokemon.WinForms
             FLP_Bots.Location = new Point(0, 37);
             FLP_Bots.Margin = new Padding(0);
             FLP_Bots.Name = "FLP_Bots";
-            FLP_Bots.Size = new Size(811, 435);
+            FLP_Bots.Size = new Size(765, 445);
             FLP_Bots.TabIndex = 9;
             FLP_Bots.Paint += FLP_Bots_Paint;
             FLP_Bots.Resize += FLP_Bots_Resize;
@@ -173,7 +173,7 @@ namespace SysBot.Pokemon.WinForms
             Tab_Hub.Location = new Point(4, 34);
             Tab_Hub.Name = "Tab_Hub";
             Tab_Hub.Padding = new Padding(3);
-            Tab_Hub.Size = new Size(812, 471);
+            Tab_Hub.Size = new Size(841, 481);
             Tab_Hub.TabIndex = 2;
             Tab_Hub.Text = "Hub";
             // 
@@ -183,7 +183,7 @@ namespace SysBot.Pokemon.WinForms
             PG_Hub.Location = new Point(3, 3);
             PG_Hub.Name = "PG_Hub";
             PG_Hub.PropertySort = PropertySort.Categorized;
-            PG_Hub.Size = new Size(806, 465);
+            PG_Hub.Size = new Size(835, 475);
             PG_Hub.TabIndex = 0;
             PG_Hub.ToolbarVisible = false;
             // 
@@ -192,7 +192,7 @@ namespace SysBot.Pokemon.WinForms
             Tab_Logs.Controls.Add(RTB_Logs);
             Tab_Logs.Location = new Point(4, 34);
             Tab_Logs.Name = "Tab_Logs";
-            Tab_Logs.Size = new Size(709, 471);
+            Tab_Logs.Size = new Size(841, 481);
             Tab_Logs.TabIndex = 1;
             Tab_Logs.Text = "Logs";
             // 
@@ -202,7 +202,7 @@ namespace SysBot.Pokemon.WinForms
             RTB_Logs.Location = new Point(0, 0);
             RTB_Logs.Name = "RTB_Logs";
             RTB_Logs.ReadOnly = true;
-            RTB_Logs.Size = new Size(709, 471);
+            RTB_Logs.Size = new Size(841, 481);
             RTB_Logs.TabIndex = 0;
             RTB_Logs.Text = "";
             // 
@@ -287,10 +287,10 @@ namespace SysBot.Pokemon.WinForms
             ButtonPanel.Controls.Add(B_RebootReset);
             ButtonPanel.Controls.Add(B_Stop);
             ButtonPanel.Controls.Add(B_Start);
-            ButtonPanel.Location = new Point(237, 0);
+            ButtonPanel.Location = new Point(293, 0);
             ButtonPanel.Margin = new Padding(3, 4, 3, 4);
             ButtonPanel.Name = "ButtonPanel";
-            ButtonPanel.Size = new Size(579, 35);
+            ButtonPanel.Size = new Size(476, 33);
             ButtonPanel.TabIndex = 0;
             // 
             // B_RefreshMap
@@ -316,7 +316,7 @@ namespace SysBot.Pokemon.WinForms
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
             AutoScaleMode = AutoScaleMode.Font;
-            ClientSize = new Size(717, 509);
+            ClientSize = new Size(773, 519);
             Controls.Add(ButtonPanel);
             Controls.Add(TC_Main);
             Icon = Resources.icon;

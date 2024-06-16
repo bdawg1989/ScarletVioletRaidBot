@@ -3458,8 +3458,8 @@ namespace SysBot.Pokemon.SV.BotRaid
                     return;
                 }
             }
-
-            Log($"Seed {denHexSeedUInt:X8} not found in any region.");
+            Log($"Seed {denHexSeedUInt:X8} not found in any region.  Refreshing Map.");
+            shouldRefreshMap = true;
         }
 
         public static (PK9, Embed) RaidInfoCommand(string seedValue, int contentType, TeraRaidMapParent map, int storyProgressLevel, int raidDeliveryGroupID, List<string> rewardsToShow, bool moveTypeEmojis, List<MoveTypeEmojiInfo> customTypeEmojis, int queuePosition = 0, bool isEvent = false)

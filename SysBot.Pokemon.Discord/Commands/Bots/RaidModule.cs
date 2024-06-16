@@ -45,7 +45,12 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 await ReplyAsync("Invalid seed format. Please enter a valid seed.");
                 return;
             }
-
+            if (level == 7 && storyProgressLevel == 6 && string.IsNullOrEmpty(speciesName))
+            {
+                var availableSpecies = string.Join(", ", SpeciesToGroupIDMap.Keys);
+                await ReplyAsync($"For 7★ raids, please specify the species name. Available species: {availableSpecies}").ConfigureAwait(false);
+                return;
+            }
             // Check Compatibility of Difficulty and Story Progress Level
             var compatible = CheckProgressandLevel(level, storyProgressLevel);
             if (!compatible)
@@ -498,10 +503,15 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 await ReplyAsync("Invalid seed format. Please enter a seed consisting of exactly 8 hexadecimal digits.").ConfigureAwait(false);
                 return;
             }
-
-            if (level < 1 || level > 7)  // Adjusted level range to 1-7
+            if (level == 7 && storyProgressLevel == 6 && string.IsNullOrEmpty(speciesName))
             {
-                await ReplyAsync("Invalid raid level. Please enter a level between 1 and 7.").ConfigureAwait(false);  // Adjusted message to reflect new level range
+                var availableSpecies = string.Join(", ", SpeciesToGroupIDMap.Keys);
+                await ReplyAsync($"For 7★ raids, please specify the species name. Available species: {availableSpecies}").ConfigureAwait(false);
+                return;
+            }
+            if (level < 1 || level > 7) 
+            {
+                await ReplyAsync("Invalid raid level. Please enter a level between 1 and 7.").ConfigureAwait(false); 
                 return;
             }
             var gameProgress = ConvertToGameProgress(storyProgressLevel);
@@ -677,16 +687,12 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             {
                 case 6: // Unlocked 6 Stars
                     return level >= 3 && level <= 7;
-
                 case 5: // Unlocked 5 Stars
                     return level >= 3 && level <= 5;
-
                 case 4: // Unlocked 4 Stars
-                    return level >= 1 && level <= 4;
-
+                    return level >= 3 && level <= 4;
                 case 3: // Unlocked 3 Stars
-                    return level >= 1 && level <= 3;
-
+                    return level == 3;
                 default: return false; // No 1 or 2 Star Unlocked
             }
         }
@@ -695,12 +701,12 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
         {
             return level switch
             {
+                7 => "6☆ Unlocked Progress",
                 6 => "6☆ Unlocked Progress",
                 5 => "5☆ Unlocked Progress",
                 4 => "4☆ Unlocked Progress",
                 3 => "3☆ Unlocked Progress",
-                2 => "2☆ and 1☆ Unlocked Progress Not Allowed",
-                _ => "1☆ Unlocked Progress Not Allowed",
+                _ => throw new ArgumentException("Invalid Story Progress Level... where are you getting your seeds?\nUse <https://genpkm.com/seeds.html> to get them."),
             };
         }
 
