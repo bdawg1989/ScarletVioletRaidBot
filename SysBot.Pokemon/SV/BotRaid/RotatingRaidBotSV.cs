@@ -3186,15 +3186,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             var allRewards = container.Rewards;
             uint denHexSeedUInt;
             denHexSeedUInt = uint.Parse(denHexSeed, NumberStyles.AllowHexSpecifier);
-            bool seedFound = await FindSeedIndexInRaids(denHexSeedUInt, token);
-
-            if (!seedFound)
-            {
-                Log($"Seed {denHexSeedUInt:X8} not found in any region. Stopping processing and refreshing the map.");
-                shouldRefreshMap = true;
-                return;
-            }
-
+            await FindSeedIndexInRaids(denHexSeedUInt, token);
             var raidInfoList = await ExtractPaldeaRaidInfo(token);
             bool newEventSpeciesFound = false;
             var (distGroupIDs, mightGroupIDs) = GetPossibleGroups(container);
@@ -3426,7 +3418,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
         }
 
-        private async Task<bool> FindSeedIndexInRaids(uint denHexSeedUInt, CancellationToken token)
+        private async Task FindSeedIndexInRaids(uint denHexSeedUInt, CancellationToken token)
         {
             var upperBound = KitakamiDensCount == 25 ? 94 : 95;
             var startIndex = KitakamiDensCount == 25 ? 94 : 95;
@@ -3439,7 +3431,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 if (seed == denHexSeedUInt)
                 {
                     SeedIndexToReplace = i;
-                    return true;
+                    return;
                 }
             }
 
@@ -3451,7 +3443,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 if (seed == denHexSeedUInt)
                 {
                     SeedIndexToReplace = i + 69;
-                    return true;
+                    return;
                 }
             }
 
@@ -3463,11 +3455,11 @@ namespace SysBot.Pokemon.SV.BotRaid
                 if (seed == denHexSeedUInt)
                 {
                     SeedIndexToReplace = i - 1;
-                    return true;
+                    return;
                 }
             }
 
-            return false;
+            Log($"Seed {denHexSeedUInt:X8} not found in any region.");
         }
 
         public static (PK9, Embed) RaidInfoCommand(string seedValue, int contentType, TeraRaidMapParent map, int storyProgressLevel, int raidDeliveryGroupID, List<string> rewardsToShow, bool moveTypeEmojis, List<MoveTypeEmojiInfo> customTypeEmojis, int queuePosition = 0, bool isEvent = false)
