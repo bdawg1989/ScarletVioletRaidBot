@@ -5,6 +5,7 @@ using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using PKHeX.Core;
 using SysBot.Base;
+using SysBot.Pokemon.Discord.Helpers;
 using System;
 using System.Linq;
 using System.Reflection;
@@ -16,21 +17,22 @@ namespace SysBot.Pokemon.Discord
     public static class SysCordSettings
     {
         public static DiscordManager Manager { get; internal set; } = default!;
-        public static DiscordSettings Settings => Manager.Config;
-        public static PokeRaidHubConfig HubConfig { get; internal set; } = default!;
+        public static DiscordSettings? Settings => Manager.Config;
+        public static PokeRaidHubConfig? HubConfig { get; internal set; } = default!;
     }
 
     public sealed class SysCord<T> where T : PKM, new()
     {
-        public static PokeBotRunner<T> Runner { get; private set; } = default!;
-        public static RestApplication App { get; private set; } = default!;
+        public static PokeBotRunner<T>? Runner { get; private set; } = default!;
+        public static RestApplication? App { get; private set; } = default!;
 
-        public static SysCord<T> Instance { get; private set; }
-        public static ReactionService ReactionService { get; private set; }
+        public static SysCord<T>? Instance { get; private set; }
+        public static ReactionService? ReactionService { get; private set; }
         private readonly DiscordSocketClient _client;
         private readonly DiscordManager Manager;
         public readonly PokeRaidHub<T> Hub;
-
+        private const int MaxReconnectDelay = 60000; // 1 minute
+        private int _reconnectAttempts = 0;
         // Keep the CommandService and DI container around for use with commands.
         // These two types require you install the Discord.Net.Commands package.
         private readonly CommandService _commands;
@@ -52,15 +54,17 @@ namespace SysBot.Pokemon.Discord
             _client = new DiscordSocketClient(new DiscordSocketConfig
             {
                 LogLevel = LogSeverity.Info,
-                GatewayIntents = GatewayIntents.Guilds |
-                                GatewayIntents.GuildMessages |
-                                GatewayIntents.DirectMessages |
-                                GatewayIntents.GuildMembers |
-                                GatewayIntents.MessageContent |
-                                GatewayIntents.GuildMessageReactions,
-                MessageCacheSize = 100,
+                GatewayIntents = GatewayIntents.Guilds
+                       | GatewayIntents.GuildMessages
+                       | GatewayIntents.DirectMessages
+                       | GatewayIntents.MessageContent
+                       | GatewayIntents.GuildMessageReactions
+                       | GatewayIntents.GuildMembers,
+                MessageCacheSize = 500, 
                 AlwaysDownloadUsers = true,
+                ConnectionTimeout = 30000,
             });
+            _client.Disconnected += HandleDisconnect;
 
             _commands = new CommandService(new CommandServiceConfig
             {
@@ -131,6 +135,28 @@ namespace SysBot.Pokemon.Discord
             LogSeverity.Debug => ConsoleColor.DarkGray,
             _ => Console.ForegroundColor,
         };
+
+        private async Task HandleDisconnect(Exception ex)
+        {
+            if (ex is GatewayReconnectException)
+            {
+                // Discord is telling us to reconnect, so we don't need to handle it ourselves
+                return;
+            }
+
+            var delay = Math.Min(MaxReconnectDelay, 1000 * Math.Pow(2, _reconnectAttempts));
+            await Task.Delay((int)delay);
+
+            try
+            {
+                await _client.StartAsync();
+                _reconnectAttempts = 0;
+            }
+            catch
+            {
+                _reconnectAttempts++;
+            }
+        }
 
         public async Task MainAsync(string apiToken, CancellationToken token)
         {

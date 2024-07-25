@@ -124,6 +124,64 @@ namespace SysBot.Pokemon
             public List<SocketUser> MentionedUsers { get; set; } = [];
         }
 
+        public class TeraTypeBattlers
+        {
+            public override string ToString() => $"Define your Raid Battlers";
+            [DisplayName("Bug Battler")]
+            public string[] BugBattler { get; set; } = [];
+
+            [DisplayName("Dark Battler")]
+            public string[] DarkBattler { get; set; } = [];
+
+            [DisplayName("Dragon Battler")]
+            public string[] DragonBattler { get; set; } = [];
+
+            [DisplayName("Electric Battler")]
+            public string[] ElectricBattler { get; set; } = [];
+
+            [DisplayName("Fairy Battler")]
+            public string[] FairyBattler { get; set; } = [];
+
+            [DisplayName("Fighting Battler")]
+            public string[] FightingBattler { get; set; } = [];
+
+            [DisplayName("Fire Battler")]
+            public string[] FireBattler { get; set; } = [];
+
+            [DisplayName("Flying Battler")]
+            public string[] FlyingBattler { get; set; } = [];
+
+            [DisplayName("Ghost Battler")]
+            public string[] GhostBattler { get; set; } = [];
+
+            [DisplayName("Grass Battler")]
+            public string[] GrassBattler { get; set; } = [];
+
+            [DisplayName("Ground Battler")]
+            public string[] GroundBattler { get; set; } = [];
+
+            [DisplayName("Ice Battler")]
+            public string[] IceBattler { get; set; } = [];
+
+            [DisplayName("Normal Battler")]
+            public string[] NormalBattler { get; set; } = [];
+
+            [DisplayName("Poison Battler")]
+            public string[] PoisonBattler { get; set; } = [];
+
+            [DisplayName("Psychic Battler")]
+            public string[] PsychicBattler { get; set; } = [];
+
+            [DisplayName("Rock Battler")]
+            public string[] RockBattler { get; set; } = [];
+
+            [DisplayName("Steel Battler")]
+            public string[] SteelBattler { get; set; } = [];
+
+            [DisplayName("Water Battler")]
+            public string[] WaterBattler { get; set; } = [];
+        }
+
         [Category(Hosting), TypeConverter(typeof(CategoryConverter<RotatingRaidSettingsCategory>))]
         public class RotatingRaidSettingsCategory
         {
@@ -377,6 +435,11 @@ namespace SysBot.Pokemon
         [Category("MysteryRaids"), TypeConverter(typeof(ExpandableObjectConverter))]
         public class MysteryRaidsSettings
         {
+
+            [DisplayName("Tera Type Battlers")]
+            [TypeConverter(typeof(ExpandableObjectConverter))]
+            public TeraTypeBattlers TeraTypeBattlers { get; set; } = new TeraTypeBattlers();
+
             [TypeConverter(typeof(ExpandableObjectConverter))]
             [DisplayName("3 Star Progress Settings")]
             public Unlocked3StarSettings Unlocked3StarSettings { get; set; } = new Unlocked3StarSettings();

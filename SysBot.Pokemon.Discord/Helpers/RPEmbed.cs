@@ -1,18 +1,20 @@
 ﻿using Discord;
 using PKHeX.Core;
+using System.Threading.Tasks;
 using Color = Discord.Color;
 
 namespace SysBot.Pokemon.Discord.Helpers;
 
 public static class RPEmbed
 {
-    public static Embed PokeEmbed(PKM pk, string username)
+    public static async Task<Embed> PokeEmbedAsync(PKM pk, string username)
     {
         var strings = GameInfo.GetStrings(GameLanguage.DefaultLanguage);
         var items = strings.GetItemStrings(pk.Context, (GameVersion)pk.Version);
         var formName = ShowdownParsing.GetStringFromForm(pk.Form, strings, pk.Species, pk.Context);
         var itemName = items[pk.HeldItem];
-        (int R, int G, int B) = RaidExtensions<PK9>.GetDominantColor(RaidExtensions<PK9>.PokeImg(pk, false, false));
+
+        (int R, int G, int B) = await RaidExtensions<PK9>.GetDominantColorAsync(RaidExtensions<PK9>.PokeImg(pk, false, false));
         var embedColor = new Color(R, G, B);
 
         var embed = new EmbedBuilder

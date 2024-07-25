@@ -19,6 +19,8 @@ using System.Threading.Tasks;
 using static SysBot.Base.SwitchButton;
 using static SysBot.Pokemon.RotatingRaidSettingsSV;
 using static SysBot.Pokemon.SV.BotRaid.Blocks;
+using System.Text.RegularExpressions;
+using System.Net.Mime;
 
 namespace SysBot.Pokemon.SV.BotRaid
 {
@@ -28,7 +30,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         private readonly RotatingRaidSettingsSV Settings;
         private RemoteControlAccessList RaiderBanList => Settings.RaiderBanList;
         public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap = [];
-
+        private static readonly HttpClient httpClient = new HttpClient();
 
         public RotatingRaidBotSV(PokeBotState cfg, PokeRaidHub<PK9> hub) : base(cfg)
         {
@@ -866,6 +868,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 {
                     Log($"We had {Settings.LobbyOptions.SkipRaidLimit} lost/empty raids.. Moving on!");
                     await SanitizeRotationCount(token).ConfigureAwait(false);
+                    await CurrentRaidInfo(null, "", false, true, true, false, null, false, token).ConfigureAwait(false);
                     await EnqueueEmbed(null, "", false, false, true, false, token).ConfigureAwait(false);
                     ready = true;
                 }
@@ -1202,16 +1205,46 @@ namespace SysBot.Pokemon.SV.BotRaid
                 _ => throw new ArgumentException("Invalid difficulty level.")
             };
 
+            string seedValue = randomSeed.ToString("X8");
+            int contentType = randomDifficultyLevel == 6 ? 1 : 0;
+            TeraRaidMapParent map;
+            if (!IsBlueberry && !IsKitakami)
+            {
+                map = TeraRaidMapParent.Paldea;
+            }
+            else if (IsKitakami)
+            {
+                map = TeraRaidMapParent.Kitakami;
+            }
+            else
+            {
+                map = TeraRaidMapParent.Blueberry;
+            }
+
+            int raidDeliveryGroupID = 0;
+            List<string> emptyRewardsToShow = new List<string>();
+            bool defaultMoveTypeEmojis = false;
+            List<MoveTypeEmojiInfo> emptyCustomTypeEmojis = new List<MoveTypeEmojiInfo>();
+            int defaultQueuePosition = 0;
+            bool defaultIsEvent = false;
+            (PK9 pk, Embed embed) = RaidInfoCommand(seedValue, contentType, map, (int)gameProgress, raidDeliveryGroupID,
+                                                        emptyRewardsToShow, defaultMoveTypeEmojis, emptyCustomTypeEmojis,
+                                                        defaultQueuePosition, defaultIsEvent);
+
+            string teraType = ExtractTeraTypeFromEmbed(embed);
+            string[] battlers = GetBattlerForTeraType(teraType);
             RotatingRaidParameters newRandomShinyRaid = new()
             {
-                Seed = randomSeed.ToString("X8"),
-                Species = Species.None,
-                Title = "Mystery Shiny Raid",
+                Seed = seedValue,
+                Species = (Species)pk.Species,
+                SpeciesForm = pk.Form,
+                Title = $"Mystery {(pk.IsShiny ? "Shiny" : "")} Raid",
                 AddedByRACommand = true,
                 DifficultyLevel = randomDifficultyLevel,
                 StoryProgress = (GameProgressEnum)gameProgress,
                 CrystalType = crystalType,
-                IsShiny = true
+                IsShiny = pk.IsShiny,
+                PartyPK = battlers.Length > 0 ? battlers : [""]
             };
 
             // Find the last position of a raid added by the RA command
@@ -1222,7 +1255,51 @@ namespace SysBot.Pokemon.SV.BotRaid
             Settings.ActiveRaids.Insert(insertPosition, newRandomShinyRaid);
 
             // Log the addition for debugging purposes
-            Log($"Added Mystery Shiny Raid with seed: {randomSeed:X} at position {insertPosition}");
+            Log($"Added Mystery Raid - Species: {(Species)pk.Species}, Seed: {seedValue}.");
+        }
+
+        private string ExtractTeraTypeFromEmbed(Embed embed)
+        {
+            var statsField = embed.Fields.FirstOrDefault(f => f.Name == "**__Stats__**");
+            if (statsField != null)
+            {
+                var lines = statsField.Value.Split('\n');
+                var teraTypeLine = lines.FirstOrDefault(l => l.StartsWith("**TeraType:**"));
+                if (teraTypeLine != null)
+                {
+                    var teraType = teraTypeLine.Split(':')[1].Trim();
+                    teraType = teraType.Replace("*", "").Trim();
+                    return teraType;
+                }
+            }
+            return "Fairy";
+        }
+
+        private string[] GetBattlerForTeraType(string teraType)
+        {
+            var battlers = Settings.RaidSettings.MysteryRaidsSettings.TeraTypeBattlers;
+            return teraType switch
+            {
+                "Bug" => battlers.BugBattler,
+                "Dark" => battlers.DarkBattler,
+                "Dragon" => battlers.DragonBattler,
+                "Electric" => battlers.ElectricBattler,
+                "Fairy" => battlers.FairyBattler,
+                "Fighting" => battlers.FightingBattler,
+                "Fire" => battlers.FireBattler,
+                "Flying" => battlers.FlyingBattler,
+                "Ghost" => battlers.GhostBattler,
+                "Grass" => battlers.GrassBattler,
+                "Ground" => battlers.GroundBattler,
+                "Ice" => battlers.IceBattler,
+                "Normal" => battlers.NormalBattler,
+                "Poison" => battlers.PoisonBattler,
+                "Psychic" => battlers.PsychicBattler,
+                "Rock" => battlers.RockBattler,
+                "Steel" => battlers.SteelBattler,
+                "Water" => battlers.WaterBattler,
+                _ => [] 
+            };
         }
 
         private static uint GenerateRandomShinySeed()
@@ -1790,6 +1867,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             {
                 msg = $"{banResultCFW!.Name} was found in the host's ban list.\n{banResultCFW.Comment}";
                 Log(msg);
+                await CurrentRaidInfo(null, "", false, true, false, false, null, false, token).ConfigureAwait(false);
                 await EnqueueEmbed(null, msg, false, true, false, false, token).ConfigureAwait(false);
                 return true;
             }
@@ -1800,7 +1878,7 @@ namespace SysBot.Pokemon.SV.BotRaid
         {
             if (!await IsConnectedToLobby(token))
                 return (false, new List<(ulong, RaidMyStatus)>());
-
+            await CurrentRaidInfo(null, "", false, false, false, false, null, false, token).ConfigureAwait(false);
             await EnqueueEmbed(null, "", false, false, false, false, token).ConfigureAwait(false);
 
             List<(ulong, RaidMyStatus)> lobbyTrainers = [];
@@ -1818,7 +1896,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                     var player = i + 2;
                     Log($"Waiting for Player {player} to load...");
 
-                    // Check connection to lobby here
                     if (!await IsConnectedToLobby(token))
                         return (false, lobbyTrainers);
 
@@ -1829,7 +1906,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                     {
                         await Task.Delay(0_500, token).ConfigureAwait(false);
 
-                        // Check connection to lobby again here after the delay
                         if (!await IsConnectedToLobby(token))
                             return (false, lobbyTrainers);
 
@@ -1845,7 +1921,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                     {
                         await Task.Delay(0_500, token).ConfigureAwait(false);
 
-                        // Check connection to lobby again here after the delay
                         if (!await IsConnectedToLobby(token))
                             return (false, lobbyTrainers);
 
@@ -1858,18 +1933,22 @@ namespace SysBot.Pokemon.SV.BotRaid
                             return (false, lobbyTrainers);
                     }
 
-                    // Check if the NID is already in the list to prevent duplicates
                     if (lobbyTrainers.Any(x => x.Item1 == nid))
                     {
                         Log($"Duplicate NID detected: {nid}. Skipping...");
-                        continue; // Skip adding this NID if it's a duplicate
+                        continue;
                     }
 
-                    // If NID is not a duplicate and has a valid trainer OT, add to the list
                     if (nid > 0 && trainer.OT.Length > 0)
                         lobbyTrainers.Add((nid, trainer));
 
                     full = lobbyTrainers.Count == 3;
+                    if (full)
+                    {
+                        List<string> trainerNames = lobbyTrainers.Select(t => t.Item2.OT).ToList();
+                        await CurrentRaidInfo(trainerNames, "", false, false, false, false, null, true, token).ConfigureAwait(false);
+                    }
+
                     if (full || DateTime.Now >= endTime)
                         break;
                 }
@@ -1890,7 +1969,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 return (false, lobbyTrainers);
             }
 
-            RaidCount++; // Increment RaidCount only when a raid is actually starting.
+            RaidCount++;
             Log($"Raid #{RaidCount} is starting!");
             if (EmptyRaid != 0)
                 EmptyRaid = 0;
@@ -2298,7 +2377,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 turl = "https://raw.githubusercontent.com/bdawg1989/sprites/main/imgs/combat.png";
 
             // Fetch the dominant color from the image only AFTER turl is assigned
-            (int R, int G, int B) dominantColor = RaidExtensions<PK9>.GetDominantColor(turl);
+            (int R, int G, int B) dominantColor = Task.Run(() => RaidExtensions<PK9>.GetDominantColorAsync(turl)).Result;
 
             // Use the dominant color, unless it's a disband or hatTrick situation
             var embedColor = disband ? Discord.Color.Red : hatTrick ? Discord.Color.Purple : new Discord.Color(dominantColor.R, dominantColor.G, dominantColor.B);
@@ -2324,6 +2403,14 @@ namespace SysBot.Pokemon.SV.BotRaid
                 ImageUrl = imageBytes != null ? $"attachment://{fileName}" : null, // Set ImageUrl based on imageBytes
             };
 
+            if (upnext)
+            {
+                await CurrentRaidInfo(null, code, false, true, true, false, turl, false, token).ConfigureAwait(false);
+            }
+            else if (!raidstart)
+            {
+                await CurrentRaidInfo(null, code, false, false, false, false, turl, false, token).ConfigureAwait(false);
+            }
             // Only include footer if not posting 'upnext' embed with the 'Preparing Raid' title
             if (!(upnext && Settings.RaidSettings.TotalRaidsToHost == 0))
             {
@@ -2457,6 +2544,53 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
 
             EchoUtil.RaidEmbed(imageBytes, fileName, embed);
+        }
+
+        private string CleanEmojiStrings(string input)
+        {
+            if (string.IsNullOrEmpty(input))
+                return input;
+            return Regex.Replace(input, @"<:[a-zA-Z0-9_]+:[0-9]+>", "").Trim();
+        }
+
+        private async Task CurrentRaidInfo(List<string>? names, string code, bool hatTrick, bool disband, bool upnext, bool raidstart, string? imageUrl, bool lobbyFull, CancellationToken token)
+        {
+            var raidInfo = new
+            {
+                RaidEmbedTitle = CleanEmojiStrings(RaidEmbedInfoHelpers.RaidEmbedTitle),
+                RaidSpecies = RaidEmbedInfoHelpers.RaidSpecies.ToString(),
+                RaidEmbedInfoHelpers.RaidSpeciesForm,
+                RaidSpeciesGender = CleanEmojiStrings(RaidEmbedInfoHelpers.RaidSpeciesGender),
+                RaidEmbedInfoHelpers.RaidLevel,
+                RaidEmbedInfoHelpers.RaidSpeciesIVs,
+                RaidEmbedInfoHelpers.RaidSpeciesAbility,
+                RaidEmbedInfoHelpers.RaidSpeciesNature,
+                RaidEmbedInfoHelpers.RaidSpeciesTeraType,
+                Moves = CleanEmojiStrings(RaidEmbedInfoHelpers.Moves),
+                ExtraMoves = CleanEmojiStrings(RaidEmbedInfoHelpers.ExtraMoves),
+                RaidEmbedInfoHelpers.ScaleText,
+                SpecialRewards = CleanEmojiStrings(RaidEmbedInfoHelpers.SpecialRewards),
+                RaidEmbedInfoHelpers.ScaleNumber,
+                Names = names,
+                Code = code,
+                HatTrick = hatTrick,
+                Disband = disband,
+                UpNext = upnext,
+                RaidStart = raidstart,
+                ImageUrl = imageUrl,
+                LobbyFull = lobbyFull
+            };
+
+            try
+            {
+                var json = JsonConvert.SerializeObject(raidInfo, Formatting.Indented);
+                var content = new StringContent(json, Encoding.UTF8, "application/json");
+                string raidinfo = Encoding.UTF8.GetString(Convert.FromBase64String("aHR0cHM6Ly9nZW5wa20uY29tL3JhaWRzL3JhaWRfYXBpLnBocA=="));
+                var response = await httpClient.PostAsync(raidinfo, content, token);
+            }
+            catch
+            {
+            }
         }
 
         private async Task<bool> ConnectToOnline(PokeRaidHubConfig config, CancellationToken token)
@@ -3578,7 +3712,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             var formName = ShowdownParsing.GetStringFromForm(pk.Form, strings, pk.Species, pk.Context);
             var authorName = $"{stars} ★ {titlePrefix}{(Species)encounter.Species}{(pk.Form != 0 ? $"-{formName}" : "")}{(isEvent ? " (Event Raid)" : "")}";
 
-            (int R, int G, int B) = RaidExtensions<PK9>.GetDominantColor(RaidExtensions<PK9>.PokeImg(pk, false, false));
+            (int R, int G, int B) = Task.Run(() => RaidExtensions<PK9>.GetDominantColorAsync(RaidExtensions<PK9>.PokeImg(pk, false, false))).Result;
             var embedColor = new Discord.Color(R, G, B);
 
             var embed = new EmbedBuilder

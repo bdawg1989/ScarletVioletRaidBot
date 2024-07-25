@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Buffers;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Net.Sockets;
 using System.Text;
@@ -36,16 +37,35 @@ namespace SysBot.Base
             }
 
             Log("Connecting to device...");
-            IAsyncResult result = Connection.BeginConnect(Info.IP, Info.Port, null, null);
-            bool success = result.AsyncWaitHandle.WaitOne(5000, true);
-            if (!success || !Connection.Connected)
+            int retryCount = 0;
+            const int maxRetries = 10;
+
+            while (retryCount < maxRetries)
             {
-                InitializeSocket();
-                throw new Exception("Failed to connect to device.");
+                try
+                {
+                    IAsyncResult result = Connection.BeginConnect(Info.IP, Info.Port, null, null);
+                    bool success = result.AsyncWaitHandle.WaitOne(5000, true);
+                    if (!success || !Connection.Connected)
+                    {
+                        throw new Exception("Failed to connect to device.");
+                    }
+                    Connection.EndConnect(result);
+                    Log("Connected!");
+                    Label = Name;
+                    return;
+                }
+                catch (Exception ex)
+                {
+                    retryCount++;
+                    Log($"Connection attempt {retryCount} failed: {ex.Message}");
+                    if (retryCount >= maxRetries)
+                    {
+                        throw;
+                    }
+                    Task.Delay(1000 * retryCount).Wait(); // Wait before retrying
+                }
             }
-            Connection.EndConnect(result);
-            Log("Connected!");
-            Label = Name;
         }
 
         public override void Reset()
@@ -75,19 +95,42 @@ namespace SysBot.Base
         /// <summary> Only call this if you are sending small commands. </summary>
         public async Task<int> SendAsync(byte[] buffer, CancellationToken token)
         {
-            return await Connection.SendAsync(buffer, token).AsTask();
+            return await RetryOperation(async (ct) => await Connection.SendAsync(buffer, ct).AsTask(), token);
+        }
+
+        public async Task EnsureConnectedAsync(CancellationToken token)
+        {
+            if (!Connected)
+            {
+                Log("Connection lost. Attempting to reconnect...");
+                await RetryOperation(async (ct) =>
+                {
+                    Reset();
+                    Connect();
+                    return true;
+                }, token);
+            }
         }
 
         private async Task<byte[]> ReadBytesFromCmdAsync(byte[] cmd, int length, CancellationToken token)
         {
-            await SendAsync(cmd, token).ConfigureAwait(false);
-            var size = (length * 2) + 1;
-            var buffer = ArrayPool<byte>.Shared.Rent(size);
-            var mem = buffer.AsMemory()[..size];
-            await Connection.ReceiveAsync(mem, token);
-            var result = DecodeResult(mem, length);
-            ArrayPool<byte>.Shared.Return(buffer, true);
-            return result;
+            return await RetryOperation(async (ct) =>
+            {
+                await EnsureConnectedAsync(ct);
+                await SendAsync(cmd, ct).ConfigureAwait(false);
+                var size = (length * 2) + 1;
+                var buffer = ArrayPool<byte>.Shared.Rent(size);
+                try
+                {
+                    var mem = buffer.AsMemory()[..size];
+                    await Connection.ReceiveAsync(mem, ct);
+                    return DecodeResult(mem, length);
+                }
+                finally
+                {
+                    ArrayPool<byte>.Shared.Return(buffer, true);
+                }
+            }, token);
         }
 
         private static byte[] DecodeResult(ReadOnlyMemory<byte> buffer, int length)
@@ -157,6 +200,7 @@ namespace SysBot.Base
 
         private async Task<byte[]> Read(ulong offset, int length, SwitchOffsetType type, CancellationToken token)
         {
+            await EnsureConnectedAsync(token);
             var method = type.GetReadMethod();
             if (length <= MaximumTransferSize)
             {
@@ -295,6 +339,41 @@ namespace SysBot.Base
             var result = await ReadBytesFromCmdAsync(SwitchCommand.GetUnixTime(), 8, token).ConfigureAwait(false);
             Array.Reverse(result);
             return BitConverter.ToInt64(result, 0);
+        }
+
+        private void HandleDisconnect()
+        {
+            Log("Unexpected disconnection detected. Attempting to reconnect...");
+            try
+            {
+                Reset();
+                Connect();
+            }
+            catch (Exception ex)
+            {
+                LogError($"Failed to reconnect: {ex.Message}");
+            }
+        }
+
+        private async Task<T> RetryOperation<T>(Func<CancellationToken, Task<T>> operation, CancellationToken token, int maxRetries = 3)
+        {
+            int retryCount = 0;
+            while (true)
+            {
+                try
+                {
+                    return await operation(token);
+                }
+                catch (Exception ex) when (ex is SocketException or IOException)
+                {
+                    if (++retryCount > maxRetries)
+                        throw;
+
+                    int delay = (int)Math.Pow(2, retryCount) * 1000; // Exponential backoff
+                    Log($"Connection error. Retrying in {delay}ms. Attempt {retryCount} of {maxRetries}");
+                    await Task.Delay(delay, token);
+                }
+            }
         }
     }
 }

@@ -748,7 +748,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 {
                     raidToUpdate.PartyPK = partyPK;
                     await Context.Message.DeleteAsync().ConfigureAwait(false);
-                    var embed = RPEmbed.PokeEmbed(pkm, Context.User.Username);
+                    var embed = await RPEmbed.PokeEmbedAsync(pkm, Context.User.Username);
                     await ReplyAsync(embed: embed).ConfigureAwait(false);
                 }
                 else
@@ -795,7 +795,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 {
                     raidToUpdate.PartyPK = partyPK;
                     await Context.Message.DeleteAsync().ConfigureAwait(false);
-                    var embed = RPEmbed.PokeEmbed(pk, Context.User.Username);
+                    var embed = await RPEmbed.PokeEmbedAsync(pk, Context.User.Username);
                     await ReplyAsync(embed: embed).ConfigureAwait(false);
                 }
                 else
