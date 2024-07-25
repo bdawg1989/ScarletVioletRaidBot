@@ -64,7 +64,7 @@ namespace SysBot.Pokemon.Discord
                 AlwaysDownloadUsers = true,
                 ConnectionTimeout = 30000,
             });
-            _client.Disconnected += HandleDisconnect;
+            _client.Disconnected += (ex) => HandleDisconnect(ex);
 
             _commands = new CommandService(new CommandServiceConfig
             {
@@ -136,26 +136,37 @@ namespace SysBot.Pokemon.Discord
             _ => Console.ForegroundColor,
         };
 
-        private async Task HandleDisconnect(Exception ex)
+        private Task HandleDisconnect(Exception ex)
         {
             if (ex is GatewayReconnectException)
             {
                 // Discord is telling us to reconnect, so we don't need to handle it ourselves
-                return;
+                return Task.CompletedTask;
             }
 
-            var delay = Math.Min(MaxReconnectDelay, 1000 * Math.Pow(2, _reconnectAttempts));
-            await Task.Delay((int)delay);
+            // Log the disconnection
+            Log(new LogMessage(LogSeverity.Warning, "Gateway", $"Disconnected: {ex.Message}"));
 
-            try
+            // Use Task.Run to avoid blocking
+            Task.Run(async () =>
             {
-                await _client.StartAsync();
-                _reconnectAttempts = 0;
-            }
-            catch
-            {
-                _reconnectAttempts++;
-            }
+                var delay = Math.Min(MaxReconnectDelay, 1000 * Math.Pow(2, _reconnectAttempts));
+                await Task.Delay((int)delay);
+
+                try
+                {
+                    await _client.StartAsync();
+                    _reconnectAttempts = 0;
+                    Log(new LogMessage(LogSeverity.Info, "Gateway", "Reconnected successfully"));
+                }
+                catch (Exception reconnectEx)
+                {
+                    _reconnectAttempts++;
+                    Log(new LogMessage(LogSeverity.Error, "Gateway", $"Failed to reconnect: {reconnectEx.Message}"));
+                }
+            });
+
+            return Task.CompletedTask;
         }
 
         public async Task MainAsync(string apiToken, CancellationToken token)
@@ -170,6 +181,9 @@ namespace SysBot.Pokemon.Discord
             var app = await _client.GetApplicationInfoAsync().ConfigureAwait(false);
             Manager.Owner = app.Owner.Id;
             App = app;
+
+            // Start the connection status check
+            _ = CheckConnectionStatus(token);
 
             // Wait infinitely so your bot actually stays connected.
             await MonitorStatusAsync(token).ConfigureAwait(false);
@@ -292,6 +306,27 @@ namespace SysBot.Pokemon.Discord
             var game = Hub.Config.Discord.BotGameStatus;
             if (!string.IsNullOrWhiteSpace(game))
                 await _client.SetGameAsync(game).ConfigureAwait(false);
+        }
+
+        private async Task CheckConnectionStatus(CancellationToken token)
+        {
+            while (!token.IsCancellationRequested)
+            {
+                if (_client.ConnectionState == ConnectionState.Disconnected)
+                {
+                    Log(new LogMessage(LogSeverity.Warning, "Gateway", "Detected disconnected state, attempting to reconnect..."));
+                    try
+                    {
+                        await _client.StartAsync();
+                        Log(new LogMessage(LogSeverity.Info, "Gateway", "Reconnected successfully"));
+                    }
+                    catch (Exception ex)
+                    {
+                        Log(new LogMessage(LogSeverity.Error, "Gateway", $"Failed to reconnect: {ex.Message}"));
+                    }
+                }
+                await Task.Delay(60000, token); // Check every minute
+            }
         }
     }
 }
