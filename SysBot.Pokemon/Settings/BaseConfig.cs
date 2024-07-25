@@ -14,6 +14,10 @@ namespace SysBot.Pokemon
         [Category(FeatureToggle), Description("When enabled, the bot will press the B button occasionally when it is not processing anything (to avoid sleep).")]
         public bool AntiIdle { get; set; }
 
+        [Category(Operation)]
+        [TypeConverter(typeof(ExpandableObjectConverter))]
+        public LegalitySettings Legality { get; set; } = new();
+
         [Category(FeatureToggle), Description("Enables text logs. Restart to apply changes.")]
         public bool LoggingEnabled { get; set; } = true;
 

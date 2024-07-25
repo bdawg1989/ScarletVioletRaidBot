@@ -77,7 +77,7 @@ namespace SysBot.Pokemon
             if (RunOnce)
                 return;
 
-            AutoLegalityWrapper.EnsureInitialized();
+            AutoLegalityWrapper.EnsureInitialized(Hub.Config.Legality);
 
             AddIntegrations();
 

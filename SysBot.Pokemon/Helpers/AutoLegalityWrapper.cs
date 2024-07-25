@@ -1,6 +1,9 @@
 ﻿using PKHeX.Core;
 using PKHeX.Core.AutoMod;
 using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using System.Threading;
 
 namespace SysBot.Pokemon
@@ -8,19 +11,53 @@ namespace SysBot.Pokemon
     public static class AutoLegalityWrapper
     {
         private static bool Initialized;
+        private static readonly EncounterTypeGroup[] EncounterPriority = [EncounterTypeGroup.Egg, EncounterTypeGroup.Slot, EncounterTypeGroup.Static, EncounterTypeGroup.Mystery, EncounterTypeGroup.Trade];
 
-        public static void EnsureInitialized()
+        public static void EnsureInitialized(LegalitySettings cfg)
         {
             if (Initialized)
                 return;
             Initialized = true;
-            InitializeAutoLegality();
+            InitializeAutoLegality(cfg);
         }
 
-        private static void InitializeAutoLegality()
+        private static void InitializeAutoLegality(LegalitySettings cfg)
         {
             InitializeCoreStrings();
             InitializeTrainerDatabase();
+            InitializeSettings(cfg);
+        }
+
+        private static void InitializeSettings(LegalitySettings cfg)
+        {
+            APILegality.SetAllLegalRibbons = cfg.SetAllLegalRibbons;
+            APILegality.SetMatchingBalls = cfg.SetMatchingBalls;
+            APILegality.ForceSpecifiedBall = cfg.ForceSpecifiedBall;
+            APILegality.ForceLevel100for50 = cfg.ForceLevel100for50;
+            Legalizer.EnableEasterEggs = cfg.EnableEasterEggs;
+            APILegality.AllowTrainerOverride = cfg.AllowTrainerDataOverride;
+            APILegality.AllowBatchCommands = cfg.AllowBatchCommands;
+            APILegality.PrioritizeGame = cfg.PrioritizeGame;
+            APILegality.PrioritizeGameVersion = cfg.PrioritizeGameVersion;
+            APILegality.SetBattleVersion = cfg.SetBattleVersion;
+            APILegality.Timeout = cfg.Timeout;
+            var settings = ParseSettings.Settings;
+            settings.Handler.CheckActiveHandler = false;
+            var validRestriction = new NicknameRestriction { NicknamedTrade = Severity.Fishy, NicknamedMysteryGift = Severity.Fishy };
+            settings.Nickname.SetAllTo(validRestriction);
+
+            // As of February 2024, the default setting in PKHeX is Invalid for missing HOME trackers.
+            // If the host wants to allow missing HOME trackers, we need to override the default setting.
+            bool allowMissingHOME = !cfg.EnableHOMETrackerCheck;
+            APILegality.AllowHOMETransferGeneration = allowMissingHOME;
+            if (allowMissingHOME)
+                settings.HOMETransfer.HOMETransferTrackerNotPresent = Severity.Fishy;
+
+            // We need all the encounter types present, so add the missing ones at the end.
+            var missing = EncounterPriority.Except(cfg.PrioritizeEncounters);
+            cfg.PrioritizeEncounters.AddRange(missing);
+            cfg.PrioritizeEncounters = cfg.PrioritizeEncounters.Distinct().ToList(); // Don't allow duplicates.
+            EncounterMovesetGenerator.PriorityList = cfg.PrioritizeEncounters;
         }
 
         private static void InitializeTrainerDatabase()
