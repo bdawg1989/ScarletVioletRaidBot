@@ -103,12 +103,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                 return;
             }
 
-            if (Settings.RaidSettings.TimeToWait is < 0 or > 180)
-            {
-                Log("Time to wait must be between 0 and 180 seconds.");
-                return;
-            }
-
             try
             {
                 Log("Identifying trainer data of the host console.");
@@ -1882,7 +1876,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             await EnqueueEmbed(null, "", false, false, false, false, token).ConfigureAwait(false);
 
             List<(ulong, RaidMyStatus)> lobbyTrainers = [];
-            var wait = TimeSpan.FromSeconds(Settings.RaidSettings.TimeToWait);
+            var wait = TimeSpan.FromSeconds(170);
             var endTime = DateTime.Now + wait;
             bool full = false;
 
@@ -2518,7 +2512,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
             if (!disband && names is null && !upnext)
             {
-                embed.AddField(Settings.EmbedToggles.IncludeCountdown ? $"**__Raid Starting__**:\n**<t:{DateTimeOffset.Now.ToUnixTimeSeconds() + Settings.RaidSettings.TimeToWait}:R>**" : $"**Waiting in lobby!**", $"Raid Code: **{code}**", true);
+                embed.AddField(Settings.EmbedToggles.IncludeCountdown ? $"**__Raid Starting__**:\n**<t:{DateTimeOffset.Now.ToUnixTimeSeconds() + 170}:R>**" : $"**Waiting in lobby!**", $"Raid Code: **{code}**", true);
             }
             if (!disband && names is not null && !upnext)
             {

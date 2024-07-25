@@ -258,10 +258,6 @@ namespace SysBot.Pokemon
             [Category(FeatureToggle), Description("Prevent attacks.  When true, Overworld Spawns (Pokémon) are disabled on the next seed injection.  When false, Overworld Spawns (Pokémon) are enabled on the next seed injection.")]
             public bool DisableOverworldSpawns { get; set; } = true;
 
-            [DisplayName("Start Raid in X seconds")]
-            [Category(Hosting), Description("Minimum amount of seconds to wait before starting a raid.")]
-            public int TimeToWait { get; set; } = 90;
-
             [DisplayName("Keep Current Day Seed?")]
             [Category(Hosting), Description("When enabled, the bot will inject the current day seed to tomorrow's day seed.")]
             public bool KeepDaySeed { get; set; } = true;
