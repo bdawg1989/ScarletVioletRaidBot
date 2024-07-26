@@ -325,136 +325,153 @@ namespace SysBot.Pokemon.SV.BotRaid
 
         private async Task InnerLoop(CancellationToken token)
         {
-            bool partyReady;
-            RotationCount = 0;
-            var raidsHosted = 0;
-
-            while (!token.IsCancellationRequested)
+            try
             {
-                // Initialize offsets at the start of the routine and cache them.
-                await InitializeSessionOffsets(token).ConfigureAwait(false);
-                if (RaidCount == 0)
-                {
-                    TodaySeed = BitConverter.ToUInt64(await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerP, 8, token).ConfigureAwait(false), 0);
-                    Log($"Today Seed: {TodaySeed:X8}");
-                }
+                bool partyReady;
+                RotationCount = 0;
+                var raidsHosted = 0;
 
-                Log($"Preparing parameter for {Settings.ActiveRaids[RotationCount].Species}");
-                await ReadRaids(token).ConfigureAwait(false);
-
-                var currentSeed = BitConverter.ToUInt64(await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerP, 8, token).ConfigureAwait(false), 0);
-                if (TodaySeed != currentSeed || LobbyError >= 2)
+                while (!token.IsCancellationRequested)
                 {
-                    if (TodaySeed != currentSeed)
+                    try
                     {
-                        Log($"Current Today Seed {currentSeed:X8} does not match Starting Today Seed: {TodaySeed:X8}.\nAttempting to override Today Seed...");
-                        TodaySeed = currentSeed;
-                        await OverrideTodaySeed(token).ConfigureAwait(false);
-                        Log("Today Seed has been overridden with the current seed.");
-                    }
-
-                    if (LobbyError >= 2)
-                    {
-                        string? msg = $"Failed to create a lobby {LobbyError} times.\n";
-                        Log(msg);
-                        await CloseGame(Hub.Config, token).ConfigureAwait(false);
-                        await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
-                        LobbyError = 0;
-                        continue;
-                    }
-                }
-
-                // Clear NIDs.
-                await SwitchConnection.WriteBytesAbsoluteAsync(new byte[32], TeraNIDOffsets[0], token).ConfigureAwait(false);
-
-                // Connect online and enter den.
-                int prepareResult = await PrepareForRaid(token).ConfigureAwait(false);
-                if (prepareResult == 2)
-                {
-                    // Seed was injected, restart the loop
-                    continue;
-                }
-                else if (prepareResult == 0)
-                {
-                    // Preparation failed, reboot the game
-                    Log("Failed to prepare the raid, rebooting the game.");
-                    await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
-                    continue;
-                }
-
-                // Wait until we're in lobby.
-                if (!await GetLobbyReady(false, token).ConfigureAwait(false))
-                    continue;
-
-                if (Settings.ActiveRaids[RotationCount].AddedByRACommand)
-                {
-                    var user = Settings.ActiveRaids[RotationCount].User;
-                    var mentionedUsers = Settings.ActiveRaids[RotationCount].MentionedUsers;
-
-                    // Determine if the raid is a "Free For All"
-                    bool isFreeForAll = !Settings.ActiveRaids[RotationCount].IsCoded || EmptyRaid >= Settings.LobbyOptions.EmptyRaidLimit;
-
-                    if (!isFreeForAll)
-                    {
-                        try
+                        // Initialize offsets at the start of the routine and cache them.
+                        await InitializeSessionOffsets(token).ConfigureAwait(false);
+                        if (RaidCount == 0)
                         {
-                            // Only get and send the raid code if it's not a "Free For All"
-                            var code = await GetRaidCode(token).ConfigureAwait(false);
-                            if (user != null)
+                            TodaySeed = BitConverter.ToUInt64(await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerP, 8, token).ConfigureAwait(false), 0);
+                            Log($"Today Seed: {TodaySeed:X8}");
+                        }
+
+                        Log($"Preparing parameter for {Settings.ActiveRaids[RotationCount].Species}");
+                        await ReadRaids(token).ConfigureAwait(false);
+
+                        var currentSeed = BitConverter.ToUInt64(await SwitchConnection.ReadBytesAbsoluteAsync(RaidBlockPointerP, 8, token).ConfigureAwait(false), 0);
+                        if (TodaySeed != currentSeed || LobbyError >= 2)
+                        {
+                            if (TodaySeed != currentSeed)
                             {
-                                await user.SendMessageAsync($"Your Raid Code is **{code}**").ConfigureAwait(false);
+                                Log($"Current Today Seed {currentSeed:X8} does not match Starting Today Seed: {TodaySeed:X8}.\nAttempting to override Today Seed...");
+                                TodaySeed = currentSeed;
+                                await OverrideTodaySeed(token).ConfigureAwait(false);
+                                Log("Today Seed has been overridden with the current seed.");
                             }
-                            foreach (var mentionedUser in mentionedUsers)
+
+                            if (LobbyError >= 2)
                             {
-                                await mentionedUser.SendMessageAsync($"The Raid Code for the private raid you were invited to by {user?.Username ?? "the host"} is **{code}**").ConfigureAwait(false);
+                                string? msg = $"Failed to create a lobby {LobbyError} times.\n";
+                                Log(msg);
+                                await CloseGame(Hub.Config, token).ConfigureAwait(false);
+                                await StartGameRaid(Hub.Config, token).ConfigureAwait(false);
+                                LobbyError = 0;
+                                continue;
                             }
                         }
-                        catch (Discord.Net.HttpException ex)
+
+                        // Clear NIDs.
+                        await SwitchConnection.WriteBytesAbsoluteAsync(new byte[32], TeraNIDOffsets[0], token).ConfigureAwait(false);
+
+                        // Connect online and enter den.
+                        int prepareResult = await PrepareForRaid(token).ConfigureAwait(false);
+                        if (prepareResult == 2)
                         {
-                            // Handle exception (e.g., log the error or send a message to a logging channel)
-                            Log($"Failed to send DM to the user or mentioned users. They might have DMs turned off. Exception: {ex.Message}");
+                            // Seed was injected, restart the loop
+                            continue;
                         }
+                        else if (prepareResult == 0)
+                        {
+                            // Preparation failed, reboot the game
+                            Log("Failed to prepare the raid, rebooting the game.");
+                            await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
+                            continue;
+                        }
+
+                        // Wait until we're in lobby.
+                        if (!await GetLobbyReady(false, token).ConfigureAwait(false))
+                            continue;
+
+                        if (Settings.ActiveRaids[RotationCount].AddedByRACommand)
+                        {
+                            var user = Settings.ActiveRaids[RotationCount].User;
+                            var mentionedUsers = Settings.ActiveRaids[RotationCount].MentionedUsers;
+
+                            // Determine if the raid is a "Free For All"
+                            bool isFreeForAll = !Settings.ActiveRaids[RotationCount].IsCoded || EmptyRaid >= Settings.LobbyOptions.EmptyRaidLimit;
+
+                            if (!isFreeForAll)
+                            {
+                                try
+                                {
+                                    // Only get and send the raid code if it's not a "Free For All"
+                                    var code = await GetRaidCode(token).ConfigureAwait(false);
+                                    if (user != null)
+                                    {
+                                        await user.SendMessageAsync($"Your Raid Code is **{code}**").ConfigureAwait(false);
+                                    }
+                                    foreach (var mentionedUser in mentionedUsers)
+                                    {
+                                        await mentionedUser.SendMessageAsync($"The Raid Code for the private raid you were invited to by {user?.Username ?? "the host"} is **{code}**").ConfigureAwait(false);
+                                    }
+                                }
+                                catch (Discord.Net.HttpException ex)
+                                {
+                                    // Handle exception (e.g., log the error or send a message to a logging channel)
+                                    Log($"Failed to send DM to the user or mentioned users. They might have DMs turned off. Exception: {ex.Message}");
+                                }
+                            }
+                        }
+
+                        // Read trainers until someone joins.
+                        (partyReady, _) = await ReadTrainers(token).ConfigureAwait(false);
+                        if (!partyReady)
+                        {
+                            if (LostRaid >= Settings.LobbyOptions.SkipRaidLimit && Settings.LobbyOptions.LobbyMethod == LobbyMethodOptions.SkipRaid)
+                            {
+                                await SkipRaidOnLosses(token).ConfigureAwait(false);
+                                EmptyRaid = 0;
+                                continue;
+                            }
+
+                            // Should add overworld recovery with a game restart fallback.
+                            await RegroupFromBannedUser(token).ConfigureAwait(false);
+
+                            if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
+                            {
+                                Log("Something went wrong, attempting to recover.");
+                                await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
+                                continue;
+                            }
+
+                            // Clear trainer OTs.
+                            Log("Clearing stored OTs");
+                            for (int i = 0; i < 3; i++)
+                            {
+                                List<long> ptr = new(Offsets.Trader2MyStatusPointer);
+                                ptr[2] += i * 0x30;
+                                await SwitchConnection.PointerPoke(new byte[16], ptr, token).ConfigureAwait(false);
+                            }
+                            continue;
+                        }
+                        await CompleteRaid(token).ConfigureAwait(false);
+                        raidsHosted++;
+                        if (raidsHosted == Settings.RaidSettings.TotalRaidsToHost && Settings.RaidSettings.TotalRaidsToHost > 0)
+                            break;
+                    }
+                    catch (ArgumentOutOfRangeException ex) when (ex.ParamName == "_0")
+                    {
+                        Log("Connection error detected. Performing reboot and reset.");
+                        await PerformRebootAndReset(token).ConfigureAwait(false);
+                        return; // Exit the InnerLoop method after reboot and reset
                     }
                 }
-
-                // Read trainers until someone joins.
-                (partyReady, _) = await ReadTrainers(token).ConfigureAwait(false);
-                if (!partyReady)
-                {
-                    if (LostRaid >= Settings.LobbyOptions.SkipRaidLimit && Settings.LobbyOptions.LobbyMethod == LobbyMethodOptions.SkipRaid)
-                    {
-                        await SkipRaidOnLosses(token).ConfigureAwait(false);
-                        EmptyRaid = 0;
-                        continue;
-                    }
-
-                    // Should add overworld recovery with a game restart fallback.
-                    await RegroupFromBannedUser(token).ConfigureAwait(false);
-
-                    if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
-                    {
-                        Log("Something went wrong, attempting to recover.");
-                        await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
-                        continue;
-                    }
-
-                    // Clear trainer OTs.
-                    Log("Clearing stored OTs");
-                    for (int i = 0; i < 3; i++)
-                    {
-                        List<long> ptr = new(Offsets.Trader2MyStatusPointer);
-                        ptr[2] += i * 0x30;
-                        await SwitchConnection.PointerPoke(new byte[16], ptr, token).ConfigureAwait(false);
-                    }
-                    continue;
-                }
-                await CompleteRaid(token).ConfigureAwait(false);
-                raidsHosted++;
-                if (raidsHosted == Settings.RaidSettings.TotalRaidsToHost && Settings.RaidSettings.TotalRaidsToHost > 0)
-                    break;
+                if (Settings.RaidSettings.TotalRaidsToHost > 0 && raidsHosted != 0)
+                    Log("Total raids to host has been met.");
             }
-            if (Settings.RaidSettings.TotalRaidsToHost > 0 && raidsHosted != 0)
-                Log("Total raids to host has been met.");
+            catch (Exception ex)
+            {
+                Log($"An unexpected error occurred in InnerLoop: {ex.Message}");
+                // Handle other exceptions as needed
+            }
         }
 
         public override async Task HardStop()
