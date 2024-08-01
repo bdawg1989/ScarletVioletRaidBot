@@ -542,15 +542,30 @@ namespace SysBot.Pokemon
 
             [Category(Hosting), Description("OpenLobby - Opens the Lobby after x Empty Lobbies\nSkipRaid - Moves on after x losses/empty Lobbies\nContinue - Continues hosting the raid")]
             [DisplayName("Lobby Method")]
-            public LobbyMethodOptions LobbyMethod { get; set; } = LobbyMethodOptions.SkipRaid; // Changed the property name here
+            public LobbyMethodOptions LobbyMethod { get; set; } = LobbyMethodOptions.SkipRaid;
 
-            [Category(Hosting), Description("Empty raid limit per parameter before the bot hosts an uncoded raid. Default is 3 raids.")]
+            private int _raidLimit = 3;
+
+            [Category(Hosting), Description("Empty raid limit per parameter before the bot hosts an uncoded raid. Value must be between 1 and 3.")]
             [DisplayName("Empty Raid Limit")]
-            public int EmptyRaidLimit { get; set; } = 3;
+            public int EmptyRaidLimit
+            {
+                get => _raidLimit;
+                set => SetRaidLimit(value);
+            }
 
-            [Category(Hosting), Description("Empty/Lost raid limit per parameter before the bot moves on to the next one. Default is 3 raids.")]
+            [Category(Hosting), Description("Empty/Lost raid limit per parameter before the bot moves on to the next one. Value must be between 1 and 3.")]
             [DisplayName("Skip Raid Limit")]
-            public int SkipRaidLimit { get; set; } = 3;
+            public int SkipRaidLimit
+            {
+                get => _raidLimit;
+                set => SetRaidLimit(value);
+            }
+
+            private void SetRaidLimit(int value)
+            {
+                _raidLimit = Math.Max(1, Math.Min(3, value));
+            }
 
             [Category(FeatureToggle), Description("Set the action you would want your bot to perform. 'AFK' will make the bot idle, while 'MashA' presses A every 3.5s")]
             [DisplayName("A Button Action")]

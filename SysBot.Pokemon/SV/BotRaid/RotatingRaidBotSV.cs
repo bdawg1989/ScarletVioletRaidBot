@@ -1720,10 +1720,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                     await Click(B, 1_500, token).ConfigureAwait(false);
                 Log("PartyPK switch successful.");
             }
-
-            for (int i = 0; i < 4; i++)
-                await Click(B, 1_000, token).ConfigureAwait(false);
-
             await Task.Delay(1_500, token).ConfigureAwait(false);
 
             if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
@@ -1738,12 +1734,8 @@ namespace SysBot.Pokemon.SV.BotRaid
                     Log($"We had {Settings.LobbyOptions.EmptyRaidLimit} empty raids.. Opening this raid to all!");
                 await Click(DDOWN, 1_000, token).ConfigureAwait(false);
             }
-            else
-            {
-                await Click(A, 3_000, token).ConfigureAwait(false);
-            }
 
-            await Click(A, 8_000, token).ConfigureAwait(false);
+            await Click(A, 4_000, token).ConfigureAwait(false);
             return 1;
         }
 
@@ -1890,7 +1882,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             await EnqueueEmbed(null, "", false, false, false, false, token).ConfigureAwait(false);
 
             List<(ulong, RaidMyStatus)> lobbyTrainers = [];
-            var wait = TimeSpan.FromSeconds(170);
+            var wait = TimeSpan.FromSeconds(160);
             var endTime = DateTime.Now + wait;
             bool full = false;
 
@@ -2101,6 +2093,11 @@ namespace SysBot.Pokemon.SV.BotRaid
             await Click(A, 3_000, token).ConfigureAwait(false);
             await Click(A, 3_000, token).ConfigureAwait(false);
             await Click(B, 1_000, token).ConfigureAwait(false);
+            while (!await IsOnOverworld(OverworldOffset, token))
+            {
+                for (int i = 0; i < 8; i++)
+                    await Click(B, 1000, token);
+            }
         }
 
         private async Task InitializeSessionOffsets(CancellationToken token)
@@ -2528,7 +2525,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
             if (!disband && names is null && !upnext)
             {
-                embed.AddField(Settings.EmbedToggles.IncludeCountdown ? $"**__Raid Starting__**:\n**<t:{DateTimeOffset.Now.ToUnixTimeSeconds() + 170}:R>**" : $"**Waiting in lobby!**", $"Raid Code: **{code}**", true);
+                embed.AddField(Settings.EmbedToggles.IncludeCountdown ? $"**__Raid Starting__**:\n**<t:{DateTimeOffset.Now.ToUnixTimeSeconds() + 160}:R>**" : $"**Waiting in lobby!**", $"Raid Code: **{code}**", true);
             }
             if (!disband && names is not null && !upnext)
             {
