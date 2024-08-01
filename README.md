@@ -1,15 +1,12 @@
-# Not RaidBot
+# Sc/Vi RaidBot
 
-## Hello, and welcome to my RaidBot Project.  For support, please visit our discord community at https://notpaldea.net
+## Hello, and welcome to my RaidBot Project.  For support, please visit our discord community at https://genpkm.com/forum
 
 ![image](https://github.com/bdawg1989/NotRaidBot/assets/80122551/258bd7ab-0982-4641-9a3d-41bd192828dc)
 
 ![image](https://github.com/bdawg1989/NotPaldeaNET/assets/80122551/cc9e2d9e-eb54-4717-a896-b7afa163e1c3)
 
 ![image](https://github.com/bdawg1989/NotRaidBot/assets/80122551/a9aeb158-b6b6-415e-aa76-0e692d1283ce)
-
-# Video Guide on How to set up the Program.
-[YouTube](https://youtu.be/Zgbs6bW7Fag)
 
 # __Features__
 ## Auto Teleport 
