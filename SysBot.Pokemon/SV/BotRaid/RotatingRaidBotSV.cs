@@ -371,17 +371,20 @@ namespace SysBot.Pokemon.SV.BotRaid
                         await SwitchConnection.WriteBytesAbsoluteAsync(new byte[32], TeraNIDOffsets[0], token).ConfigureAwait(false);
 
                         // Connect online and enter den.
-                        int prepareResult = await PrepareForRaid(token).ConfigureAwait(false);
+                        int prepareResult;
+                        do
+                        {
+                            prepareResult = await PrepareForRaid(token).ConfigureAwait(false);
+                            if (prepareResult == 0)
+                            {
+                                Log("Failed to prepare the raid, rebooting the game.");
+                                await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
+                            }
+                        } while (prepareResult == 0);
+
                         if (prepareResult == 2)
                         {
                             // Seed was injected, restart the loop
-                            continue;
-                        }
-                        else if (prepareResult == 0)
-                        {
-                            // Preparation failed, reboot the game
-                            Log("Failed to prepare the raid, rebooting the game.");
-                            await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
                             continue;
                         }
 
@@ -1685,7 +1688,6 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
 
             Log("Preparing lobby...");
-            LobbyFiltersCategory settings = new();
 
             if (!await ConnectToOnline(Hub.Config, token))
             {
@@ -1693,33 +1695,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
 
             await Task.Delay(0_500, token).ConfigureAwait(false);
-            var len = string.Empty;
-            foreach (var l in Settings.ActiveRaids[RotationCount].PartyPK)
-                len += l;
-            if (len.Length > 1 && EmptyRaid == 0)
-            {
-                Log("Preparing PartyPK. Sit tight.");
-                await Task.Delay(2_500 + settings.ExtraTimeLobbyDisband, token).ConfigureAwait(false);
-                await SetCurrentBox(0, token).ConfigureAwait(false);
-                var res = string.Join("\n", Settings.ActiveRaids[RotationCount].PartyPK);
-                if (res.Length > 4096)
-                    res = res[..4096];
-                await InjectPartyPk(res, token).ConfigureAwait(false);
-
-                await Click(X, 2_000, token).ConfigureAwait(false);
-                await Click(DRIGHT, 0_500, token).ConfigureAwait(false);
-                await SetStick(SwitchStick.LEFT, 0, -32000, 1_000, token).ConfigureAwait(false);
-                await SetStick(SwitchStick.LEFT, 0, 0, 0, token).ConfigureAwait(false);
-                for (int i = 0; i < 2; i++)
-                    await Click(DDOWN, 0_500, token).ConfigureAwait(false);
-                await Click(A, 3_500, token).ConfigureAwait(false);
-                await Click(Y, 0_500, token).ConfigureAwait(false);
-                await Click(DLEFT, 0_800, token).ConfigureAwait(false);
-                await Click(Y, 0_500, token).ConfigureAwait(false);
-                for (int i = 0; i < 2; i++)
-                    await Click(B, 1_500, token).ConfigureAwait(false);
-                Log("PartyPK switch successful.");
-            }
+            await SwitchPartyPokemon(token).ConfigureAwait(false);
             await Task.Delay(1_500, token).ConfigureAwait(false);
 
             if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
@@ -1737,6 +1713,66 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             await Click(A, 4_000, token).ConfigureAwait(false);
             return 1;
+        }
+
+        private async Task SwitchPartyPokemon(CancellationToken token)
+        {
+            LobbyFiltersCategory settings = new();
+            var len = string.Empty;
+            foreach (var l in Settings.ActiveRaids[RotationCount].PartyPK)
+                len += l;
+            if (len.Length > 1 && EmptyRaid == 0)
+            {
+                Log("Preparing PartyPK. Sit tight.");
+                await Task.Delay(2_500 + settings.ExtraTimePartyPK, token).ConfigureAwait(false);
+                await SetCurrentBox(0, token).ConfigureAwait(false);
+                var res = string.Join("\n", Settings.ActiveRaids[RotationCount].PartyPK);
+                if (res.Length > 4096)
+                    res = res[..4096];
+                await InjectPartyPk(res, token).ConfigureAwait(false);
+
+                await Click(X, 2_000, token).ConfigureAwait(false);
+                await Click(DRIGHT, 0_500, token).ConfigureAwait(false);
+                await SetStick(SwitchStick.LEFT, 0, -32000, 1_000, token).ConfigureAwait(false);
+                await SetStick(SwitchStick.LEFT, 0, 0, 0, token).ConfigureAwait(false);
+                for (int i = 0; i < 2; i++)
+                    await Click(DDOWN, 0_500, token).ConfigureAwait(false);
+                await Click(A, 3_500, token).ConfigureAwait(false);
+                await Click(Y, 0_500, token).ConfigureAwait(false);
+                await Click(DLEFT, 0_800, token).ConfigureAwait(false);
+                await Click(Y, 0_500, token).ConfigureAwait(false);
+                await RecoverToOverworld(token).ConfigureAwait(false);
+                Log("PartyPK switch successful.");
+            }
+        }
+
+        private async Task<bool> RecoverToOverworld(CancellationToken token)
+        {
+            if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
+                return true;
+
+            var attempts = 0;
+            while (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
+            {
+                attempts++;
+                if (attempts >= 30)
+                    break;
+                for (int i = 0; i < 20; i++)
+                {
+                    await Click(B, 1_000, token).ConfigureAwait(false);
+                    if (await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
+                        return true;
+                }
+            }
+
+            // We didn't make it for some reason.
+            if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
+            {
+                Log("Failed to recover to overworld, rebooting the game.");
+                await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
+            }
+            await Task.Delay(1_000, token).ConfigureAwait(false);
+            return true;
         }
 
         private async Task RollBackHour(CancellationToken token)
