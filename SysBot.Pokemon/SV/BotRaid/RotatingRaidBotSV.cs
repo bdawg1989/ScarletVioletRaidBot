@@ -1698,7 +1698,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             await SwitchPartyPokemon(token).ConfigureAwait(false);
             await Task.Delay(1_500, token).ConfigureAwait(false);
 
-            if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
+            if (!await RecoverToOverworld(token).ConfigureAwait(false))
                 return 0;
 
             await Click(A, 3_000, token).ConfigureAwait(false);
@@ -1741,7 +1741,6 @@ namespace SysBot.Pokemon.SV.BotRaid
                 await Click(Y, 0_500, token).ConfigureAwait(false);
                 await Click(DLEFT, 0_800, token).ConfigureAwait(false);
                 await Click(Y, 0_500, token).ConfigureAwait(false);
-                await RecoverToOverworld(token).ConfigureAwait(false);
                 Log("PartyPK switch successful.");
             }
         }
@@ -1769,7 +1768,7 @@ namespace SysBot.Pokemon.SV.BotRaid
             if (!await IsOnOverworld(OverworldOffset, token).ConfigureAwait(false))
             {
                 Log("Failed to recover to overworld, rebooting the game.");
-                await ReOpenGame(Hub.Config, token).ConfigureAwait(false);
+                return false; // Return false instead of rebooting here
             }
             await Task.Delay(1_000, token).ConfigureAwait(false);
             return true;
