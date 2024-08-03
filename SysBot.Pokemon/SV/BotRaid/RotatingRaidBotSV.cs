@@ -1137,13 +1137,9 @@ namespace SysBot.Pokemon.SV.BotRaid
             }
         }
 
-        private void CreateAndAddRandomShinyRaidAsRequested()
+        private void CreateMysteryRaid()
         {
-            // Generate a random shiny seed
-            uint randomSeed = GenerateRandomShinySeed();
             Random random = new();
-
-            // Get the settings object
             var mysteryRaidsSettings = Settings.RaidSettings.MysteryRaidsSettings;
 
             // Check if any Mystery Raid setting is enabled
@@ -1151,8 +1147,8 @@ namespace SysBot.Pokemon.SV.BotRaid
                   mysteryRaidsSettings.Unlocked5StarSettings.Enabled || mysteryRaidsSettings.Unlocked6StarSettings.Enabled))
             {
                 Log("All Mystery Raids options are disabled. Mystery Raids will be turned off.");
-                Settings.RaidSettings.MysteryRaids = false; // Disable Mystery Raids
-                return; // Exit the method
+                Settings.RaidSettings.MysteryRaids = false;
+                return;
             }
 
             // Create a list of enabled StoryProgressLevels
@@ -1165,60 +1161,33 @@ namespace SysBot.Pokemon.SV.BotRaid
             // Randomly pick a StoryProgressLevel from the enabled levels
             GameProgress gameProgress = enabledLevels[random.Next(enabledLevels.Count)];
 
-            // Initialize a list to store possible difficulties
-            List<int> possibleDifficulties = [];
+            // Get allowed star counts for the selected progress
+            List<int> allowedStars = GetAllowedStarCounts(mysteryRaidsSettings, gameProgress);
 
-            // Determine possible difficulties based on the selected GameProgress
-            switch (gameProgress)
+            if (allowedStars.Count == 0)
             {
-                case GameProgress.Unlocked3Stars:
-                    if (mysteryRaidsSettings.Unlocked3StarSettings.Allow1StarRaids) possibleDifficulties.Add(1);
-                    if (mysteryRaidsSettings.Unlocked3StarSettings.Allow2StarRaids) possibleDifficulties.Add(2);
-                    if (mysteryRaidsSettings.Unlocked3StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
-                    break;
-
-                case GameProgress.Unlocked4Stars:
-                    if (mysteryRaidsSettings.Unlocked4StarSettings.Allow1StarRaids) possibleDifficulties.Add(1);
-                    if (mysteryRaidsSettings.Unlocked4StarSettings.Allow2StarRaids) possibleDifficulties.Add(2);
-                    if (mysteryRaidsSettings.Unlocked4StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
-                    if (mysteryRaidsSettings.Unlocked4StarSettings.Allow4StarRaids) possibleDifficulties.Add(4);
-                    break;
-
-                case GameProgress.Unlocked5Stars:
-                    if (mysteryRaidsSettings.Unlocked5StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
-                    if (mysteryRaidsSettings.Unlocked5StarSettings.Allow4StarRaids) possibleDifficulties.Add(4);
-                    if (mysteryRaidsSettings.Unlocked5StarSettings.Allow5StarRaids) possibleDifficulties.Add(5);
-                    break;
-
-                case GameProgress.Unlocked6Stars:
-                    if (mysteryRaidsSettings.Unlocked6StarSettings.Allow3StarRaids) possibleDifficulties.Add(3);
-                    if (mysteryRaidsSettings.Unlocked6StarSettings.Allow4StarRaids) possibleDifficulties.Add(4);
-                    if (mysteryRaidsSettings.Unlocked6StarSettings.Allow5StarRaids) possibleDifficulties.Add(5);
-                    if (mysteryRaidsSettings.Unlocked6StarSettings.Allow6StarRaids) possibleDifficulties.Add(6);
-                    break;
+                Log($"No allowed star count found for {gameProgress}. Skipping this Mystery Raid.");
+                return;
             }
 
-            // Check if there are any enabled difficulty levels
-            if (possibleDifficulties.Count == 0)
+            // Generate a shiny seed that produces an allowed star count
+            uint randomSeed;
+            int starCount;
+            do
             {
-                Log("No difficulty levels enabled for the selected Story Progress. Mystery Raids will be turned off.");
-                Settings.RaidSettings.MysteryRaids = false; // Disable Mystery Raids
-                return; // Exit the method
-            }
+                randomSeed = GenerateRandomShinySeed();
+                var clone = new Xoroshiro128Plus(randomSeed);
+                uint difficulty = (uint)clone.NextInt(100);
+                int progressValue = (int)gameProgress;
+                bool isBlack = gameProgress == GameProgress.Unlocked6Stars && difficulty > 70 && mysteryRaidsSettings.Unlocked6StarSettings.Allow6StarRaids;
+                starCount = RaidExtensions.GetStarCount(null, difficulty, progressValue, isBlack);
+            } while (!allowedStars.Contains(starCount));
 
-            // Randomly pick a difficulty level from the possible difficulties
-            int randomDifficultyLevel = possibleDifficulties[random.Next(possibleDifficulties.Count)];
-
-            // Determine the crystal type based on difficulty level
-            var crystalType = randomDifficultyLevel switch
-            {
-                >= 1 and <= 5 => TeraCrystalType.Base,
-                6 => TeraCrystalType.Black,
-                _ => throw new ArgumentException("Invalid difficulty level.")
-            };
+            // Now we have a valid shiny seed that produces an allowed star count
+            var finalClone = new Xoroshiro128Plus(randomSeed);
 
             string seedValue = randomSeed.ToString("X8");
-            int contentType = randomDifficultyLevel == 6 ? 1 : 0;
+            int contentType = starCount == 6 ? 1 : 0;
             TeraRaidMapParent map;
             if (!IsBlueberry && !IsKitakami)
             {
@@ -1250,12 +1219,12 @@ namespace SysBot.Pokemon.SV.BotRaid
                 Seed = seedValue,
                 Species = (Species)pk.Species,
                 SpeciesForm = pk.Form,
-                Title = $"Mystery {(pk.IsShiny ? "Shiny" : "")} Raid",
+                Title = $"Mystery Shiny Raid",
                 AddedByRACommand = true,
-                DifficultyLevel = randomDifficultyLevel,
+                DifficultyLevel = starCount,
                 StoryProgress = (GameProgressEnum)gameProgress,
-                CrystalType = crystalType,
-                IsShiny = pk.IsShiny,
+                CrystalType = starCount == 6 ? TeraCrystalType.Black : TeraCrystalType.Base,
+                IsShiny = true,
                 PartyPK = battlers.Length > 0 ? battlers : [""]
             };
 
@@ -1267,7 +1236,40 @@ namespace SysBot.Pokemon.SV.BotRaid
             Settings.ActiveRaids.Insert(insertPosition, newRandomShinyRaid);
 
             // Log the addition for debugging purposes
-            Log($"Added Mystery Raid - Species: {(Species)pk.Species}, Seed: {seedValue}.");
+            Log($"Added Mystery Shiny Raid - Species: {(Species)pk.Species}, Seed: {seedValue}, Stars: {starCount}.");
+        }
+
+        private static List<int> GetAllowedStarCounts(MysteryRaidsSettings settings, GameProgress progress)
+        {
+            List<int> allowedStars = [];
+
+            switch (progress)
+            {
+                case GameProgress.Unlocked3Stars:
+                    if (settings.Unlocked3StarSettings.Allow1StarRaids) allowedStars.Add(1);
+                    if (settings.Unlocked3StarSettings.Allow2StarRaids) allowedStars.Add(2);
+                    if (settings.Unlocked3StarSettings.Allow3StarRaids) allowedStars.Add(3);
+                    break;
+                case GameProgress.Unlocked4Stars:
+                    if (settings.Unlocked4StarSettings.Allow1StarRaids) allowedStars.Add(1);
+                    if (settings.Unlocked4StarSettings.Allow2StarRaids) allowedStars.Add(2);
+                    if (settings.Unlocked4StarSettings.Allow3StarRaids) allowedStars.Add(3);
+                    if (settings.Unlocked4StarSettings.Allow4StarRaids) allowedStars.Add(4);
+                    break;
+                case GameProgress.Unlocked5Stars:
+                    if (settings.Unlocked5StarSettings.Allow3StarRaids) allowedStars.Add(3);
+                    if (settings.Unlocked5StarSettings.Allow4StarRaids) allowedStars.Add(4);
+                    if (settings.Unlocked5StarSettings.Allow5StarRaids) allowedStars.Add(5);
+                    break;
+                case GameProgress.Unlocked6Stars:
+                    if (settings.Unlocked6StarSettings.Allow3StarRaids) allowedStars.Add(3);
+                    if (settings.Unlocked6StarSettings.Allow4StarRaids) allowedStars.Add(4);
+                    if (settings.Unlocked6StarSettings.Allow5StarRaids) allowedStars.Add(5);
+                    if (settings.Unlocked6StarSettings.Allow6StarRaids) allowedStars.Add(6);
+                    break;
+            }
+
+            return allowedStars;
         }
 
         private string ExtractTeraTypeFromEmbed(Embed embed)
@@ -2889,7 +2891,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 // Only create and add a new Mystery Shiny Raid if there are two or fewer in the list
                 if (mysteryRaidCount <= 1)
                 {
-                    CreateAndAddRandomShinyRaidAsRequested();
+                    CreateMysteryRaid();
                 }
             }
         }
