@@ -1926,24 +1926,19 @@ namespace SysBot.Pokemon.SV.BotRaid
         {
             if (!await IsConnectedToLobby(token))
                 return (false, new List<(ulong, RaidMyStatus)>());
+            await EnqueueEmbed(null, "", false, false, false, false, token).ConfigureAwait(false);
 
-            Task? delayTask = null;
+            List<(ulong, RaidMyStatus)> lobbyTrainers = [];
             TimeSpan wait;
-
             if (Settings.ActiveRaids[RotationCount].AddedByRACommand &&
                 Settings.ActiveRaids[RotationCount].Title != "Mystery Shiny Raid")
             {
-                delayTask = Task.Delay(Settings.EmbedToggles.RequestEmbedTime * 1000, token)
-                    .ContinueWith(async _ => await EnqueueEmbed(null, "", false, false, false, false, token), token);
-                wait = TimeSpan.FromSeconds(160);
+                wait = TimeSpan.FromSeconds(160) - TimeSpan.FromMilliseconds((int)Settings.EmbedToggles.RequestEmbedTime);
             }
             else
             {
-                await EnqueueEmbed(null, "", false, false, false, false, token).ConfigureAwait(false);
                 wait = TimeSpan.FromSeconds(160);
             }
-
-            List<(ulong, RaidMyStatus)> lobbyTrainers = [];
 
             var endTime = DateTime.Now + wait;
             bool full = false;
@@ -2016,11 +2011,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                 }
             }
 
-
-            if (delayTask != null)
-            {
-                await delayTask;
-            }
+            await Task.Delay(5_000, token).ConfigureAwait(false);
 
             if (lobbyTrainers.Count == 0)
             {
@@ -2324,7 +2315,13 @@ namespace SysBot.Pokemon.SV.BotRaid
                 // If it's a "Free For All", set the code as such
                 code = "Free For All";
             }
-
+            // Apply delay only if the raid was added by RA command, not a Mystery Shiny Raid, and has a code
+            if (Settings.ActiveRaids[RotationCount].AddedByRACommand &&
+                Settings.ActiveRaids[RotationCount].Title != "Mystery Shiny Raid" &&
+                code != "Free For All")
+            {
+                await Task.Delay((int)Settings.EmbedToggles.RequestEmbedTime, token).ConfigureAwait(false);
+            }
             // Description can only be up to 4096 characters.
             //var description = Settings.ActiveRaids[RotationCount].Description.Length > 0 ? string.Join("\n", Settings.ActiveRaids[RotationCount].Description) : "";
             var description = Settings.EmbedToggles.RaidEmbedDescription.Length > 0 ? string.Join("\n", Settings.EmbedToggles.RaidEmbedDescription) : "";

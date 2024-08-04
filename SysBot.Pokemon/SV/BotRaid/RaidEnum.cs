@@ -104,6 +104,15 @@ namespace SysBot.Pokemon
         _10000 = 10000 // Everything SS
     }
 
+    public enum RequestEmbedTimingOptions
+    {
+        _2500 = 2500,
+        _3000 = 3000,
+        _3500 = 3500,
+        _4000 = 4000,
+        _4500 = 4500
+    }
+
     public enum GifQuality
     {
         [Description("Default quality")]

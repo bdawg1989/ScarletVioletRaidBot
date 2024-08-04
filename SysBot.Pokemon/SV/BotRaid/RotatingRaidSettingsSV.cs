@@ -404,9 +404,30 @@ namespace SysBot.Pokemon
                 "PP Up"
             };
 
-            [Category(Hosting), Description("Amount of time (in seconds) to post a requested raid embed.")]
+            private RequestEmbedTimingOptions _requestEmbedTime = RequestEmbedTimingOptions._3500;
+
+            [Category(Hosting)]
+            [Description("Amount of time (in milliseconds) to post a requested raid embed.")]
             [DisplayName("Post User Request Embeds in...")]
-            public int RequestEmbedTime { get; set; } = 30;
+            public RequestEmbedTimingOptions RequestEmbedTime
+            {
+                get => _requestEmbedTime;
+                set
+                {
+                    if (value != RequestEmbedTimingOptions._2500 &&
+                        value != RequestEmbedTimingOptions._3000 &&
+                        value != RequestEmbedTimingOptions._3500 &&
+                        value != RequestEmbedTimingOptions._4000 &&
+                        value != RequestEmbedTimingOptions._4500)
+                    {
+                        _requestEmbedTime = RequestEmbedTimingOptions._3500;
+                    }
+                    else
+                    {
+                        _requestEmbedTime = value;
+                    }
+                }
+            }
 
             [Category(FeatureToggle), Description("When enabled, the bot will attempt take screenshots for the Raid Embeds. If you experience crashes often about \"Size/Parameter\" try setting this to false.")]
             [DisplayName("Use Screenshots?")]
