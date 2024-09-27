@@ -28,7 +28,8 @@ namespace SysBot.Pokemon.SV.BotRaid
         private readonly PokeRaidHub<PK9> Hub;
         private readonly RotatingRaidSettingsSV Settings;
         private RemoteControlAccessList RaiderBanList => Settings.RaiderBanList;
-        public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap = [];
+        public static Dictionary<string, List<(int GroupID, int Index, string DenIdentifier)>> SpeciesToGroupIDMap =
+        new(StringComparer.OrdinalIgnoreCase);
         private static readonly HttpClient httpClient = new HttpClient();
 
         public RotatingRaidBotSV(PokeBotState cfg, PokeRaidHub<PK9> hub) : base(cfg)
@@ -3025,11 +3026,11 @@ namespace SysBot.Pokemon.SV.BotRaid
 
             // Find the nearest location for each set and keep track of the overall nearest
             var nearestDen = new Dictionary<string, string>
-    {
-        { "Blueberry", FindNearestLocation(playerLocation, blueberryLocations) },
-        { "Kitakami", FindNearestLocation(playerLocation, kitakamiLocations) },
-        { "Paldea", FindNearestLocation(playerLocation, baseLocations) }
-    };
+            {
+                { "Blueberry", FindNearestLocation(playerLocation, blueberryLocations) },
+                { "Kitakami", FindNearestLocation(playerLocation, kitakamiLocations) },
+                { "Paldea", FindNearestLocation(playerLocation, baseLocations) }
+            };
 
             var overallNearest = nearestDen.Select(kv =>
             {
@@ -3487,7 +3488,7 @@ namespace SysBot.Pokemon.SV.BotRaid
                         }
 
                         // Encounter Info
-                        int raid_delivery_group_id = Settings.ActiveRaids[a].GroupID;
+                        int raid_delivery_group_id = (int)Settings.ActiveRaids[a].GroupID;
                         var encounter = allRaids[i].GetTeraEncounter(container, allRaids[i].IsEvent ? 3 : StoryProgress, raid_delivery_group_id);
                         if (encounter != null)
                         {

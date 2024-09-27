@@ -92,7 +92,7 @@ namespace SysBot.Pokemon
             public int Action1Delay { get; set; } = 5;
 
             [DisplayName("Group ID  (Event Raids Only)")]
-            public int GroupID { get; set; } = 0;
+            public int? GroupID { get; set; } = 0;
 
             [DisplayName("Embed Title")]
             public string Title { get; set; } = string.Empty;

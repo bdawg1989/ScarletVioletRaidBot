@@ -336,7 +336,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             }
             if (level < 1 || level > 7)
             {
-                await ReplyAsync("Invalid raid level. Please enter a level between 1 and 7.").ConfigureAwait(false);  // Adjusted message to reflect new level range
+                await ReplyAsync("Invalid raid level. Please enter a level between 1 and 7.").ConfigureAwait(false);
                 return;
             }
 
@@ -355,17 +355,23 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
 
             int raidDeliveryGroupID = -1;
 
-            if (!string.IsNullOrEmpty(speciesName) && SpeciesToGroupIDMap.TryGetValue(speciesName, out var groupIDAndIndices))
+            if (!string.IsNullOrEmpty(speciesName))
             {
-                var firstRaidGroupID = groupIDAndIndices.First().GroupID;
-                raidDeliveryGroupID = firstRaidGroupID;
-            }
-            else if (!string.IsNullOrEmpty(speciesName))
-            {
-                await ReplyAsync("Species name not recognized or not associated with an active event. Please check the name and try again.");
-                return;
+                string speciesKey = string.Join("", speciesName.Split(' ')).ToLower();
+
+                if (SpeciesToGroupIDMap.TryGetValue(speciesKey, out var groupIDAndIndices))
+                {
+                    var firstRaidGroupID = groupIDAndIndices.First().GroupID;
+                    raidDeliveryGroupID = firstRaidGroupID;
+                }
+                else
+                {
+                    await ReplyAsync("Species name not recognized or not associated with an active event. Please check the name and try again.");
+                    return;
+                }
             }
 
+            // Rest of your code remains the same...
             var selectedMap = IsBlueberry ? TeraRaidMapParent.Blueberry : (IsKitakami ? TeraRaidMapParent.Kitakami : TeraRaidMapParent.Paldea);
             var rewardsToShow = settings.EmbedToggles.RewardsToShow;
             var (pk, raidEmbed) = RaidInfoCommand(seed, (int)crystalType, selectedMap, storyProgressLevel, raidDeliveryGroupID, rewardsToShow, settings.EmbedToggles.MoveTypeEmojis, settings.EmbedToggles.CustomTypeEmojis);
@@ -401,6 +407,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
                 IsShiny = pk.IsShiny,
                 AddedByRACommand = false,
                 Title = $"{(Species)pk.Species}",
+                GroupID = raidDeliveryGroupID != -1 ? raidDeliveryGroupID : null
             };
             // Check if Species is Ditto and set PartyPK to Showdown template
             if (newparam.Species == Species.Ditto)
@@ -415,6 +422,49 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             await Context.Message.DeleteAsync().ConfigureAwait(false);
             var msg = $"Your new raid has been added.";
             await ReplyAsync(msg, embed: raidEmbed).ConfigureAwait(false);
+        }
+
+        [Command("listevents")]
+        [Alias("le")]
+        [Summary("Lists all found event raids stored in the SpeciesToGroupID dictionary.")]
+        [RequireSudo]
+        public async Task ListEventRaids()
+        {
+            if (SpeciesToGroupIDMap == null || SpeciesToGroupIDMap.Count == 0)
+            {
+                await ReplyAsync("No raids found in the SpeciesToGroupIDMap.").ConfigureAwait(false);
+                return;
+            }
+
+            var sb = new StringBuilder();
+            sb.AppendLine("**Found Raids:**");
+
+            foreach (var kvp in SpeciesToGroupIDMap)
+            {
+                var speciesName = kvp.Key;
+                var groupIDAndIndices = kvp.Value;
+
+                sb.AppendLine($"\n**{speciesName}:**");
+
+                foreach (var (GroupID, Index, DenIdentifier) in groupIDAndIndices)
+                {
+                    sb.AppendLine($"- GroupID: `{GroupID}`, Index: `{Index}`, DenIdentifier: `{DenIdentifier}`");
+                }
+            }
+
+            // Check if the message exceeds Discord's character limit
+            if (sb.Length > 2000)
+            {
+                // Send the output as a file if it exceeds the limit
+                using (var stream = new MemoryStream(Encoding.UTF8.GetBytes(sb.ToString())))
+                {
+                    await Context.Channel.SendFileAsync(stream, "RaidsList.txt", "The list is too long, so I've attached it as a file.").ConfigureAwait(false);
+                }
+            }
+            else
+            {
+                await ReplyAsync(sb.ToString()).ConfigureAwait(false);
+            }
         }
 
         [Command("addUserRaid")]
