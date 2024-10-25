@@ -8,6 +8,9 @@
 
 ![image](https://github.com/bdawg1989/NotRaidBot/assets/80122551/a9aeb158-b6b6-415e-aa76-0e692d1283ce)
 
+# How-To Video
+https://youtu.be/wlFE04oiqGs?si=EDoVRaocGyCapN9n
+
 # __Features__
 ## Auto Teleport 
 - Teleports user to the nearest raid den if raid den is lost.
