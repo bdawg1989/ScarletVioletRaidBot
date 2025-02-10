@@ -12,4 +12,11 @@
     <ProjectReference Include="..\SysBot.Pokemon\SysBot.Pokemon.csproj" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
+
+	<ItemGroup>
+		<Reference Include="PKHeX.Core">
+			<HintPath>..\SysBot.Pokemon\deps\PKHeX.Core.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	
 </Project>
