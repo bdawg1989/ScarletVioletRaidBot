@@ -11,7 +11,7 @@
     <Description>Nintendo Switch Pokémon Bot Manager</Description>
     <ApplicationIcon>icon.ico</ApplicationIcon>
     <StartupObject>SysBot.Pokemon.WinForms.Program</StartupObject>
-    <AssemblyName>NotRaidBot</AssemblyName>
+    <AssemblyName>SVRaidBot</AssemblyName>
     <Version>01.00.00</Version>
     <Platforms>x64</Platforms>
     <GenerateResourceUsePreserializedResources>true</GenerateResourceUsePreserializedResources>

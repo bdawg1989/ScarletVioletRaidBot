@@ -62,7 +62,7 @@ namespace SysBot.Pokemon.WinForms
             }
 
             LoadControls();
-            Text = $"{(string.IsNullOrEmpty(Config.Hub.BotName) ? "NotPaldea.net" : Config.Hub.BotName)} {NotRaidBot.Version} ({Config.Mode})";
+            Text = $"{(string.IsNullOrEmpty(Config.Hub.BotName) ? "NotPaldea.net" : Config.Hub.BotName)} {SVRaidBot.Version} ({Config.Mode})";
             Task.Run(BotMonitor);
             InitUtil.InitializeStubs(Config.Mode);
         }

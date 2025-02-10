@@ -304,7 +304,7 @@ namespace SysBot.Pokemon.Discord.Commands.Bots
             try
             {
                 // Read the file and parse the JSON
-                var jsonData = File.ReadAllText(NotRaidBot.ConfigPath);
+                var jsonData = File.ReadAllText(SVRaidBot.ConfigPath);
                 var config = JObject.Parse(jsonData);
 
                 // Access the IP address from the first bot in the Bots array

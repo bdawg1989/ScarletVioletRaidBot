@@ -145,11 +145,11 @@ namespace SysBot.Pokemon.WinForms
         private static async Task<string> StartDownloadProcessAsync(string downloadUrl)
         {
             Main.IsUpdating = true;
-            string tempPath = Path.Combine(Path.GetTempPath(), $"NotRaidBot_{Guid.NewGuid()}.exe");
+            string tempPath = Path.Combine(Path.GetTempPath(), $"SVRaidBot_{Guid.NewGuid()}.exe");
 
             using (var client = new HttpClient())
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "NotRaidBot");
+                client.DefaultRequestHeaders.Add("User-Agent", "SVRaidBot");
                 var response = await client.GetAsync(downloadUrl);
                 response.EnsureSuccessStatusCode();
                 var fileBytes = await response.Content.ReadAsByteArrayAsync();
@@ -169,11 +169,11 @@ namespace SysBot.Pokemon.WinForms
                 string backupPath = Path.Combine(applicationDirectory, $"{executableName}.backup");
 
                 // Create batch file for update process
-                string batchPath = Path.Combine(Path.GetTempPath(), "UpdateNotRaidBot.bat");
+                string batchPath = Path.Combine(Path.GetTempPath(), "UpdateSVRaidBot.bat");
                 string batchContent = @$"
                                         @echo off
                                         timeout /t 2 /nobreak >nul
-                                        echo Updating NotRaidBot...
+                                        echo Updating SVRaidBot...
 
                                         rem Backup current version
                                         if exist ""{currentExePath}"" (

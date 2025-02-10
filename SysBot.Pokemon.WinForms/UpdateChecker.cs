@@ -12,7 +12,7 @@ namespace SysBot.Pokemon.WinForms
     public class UpdateChecker
     {
         private const string RepositoryOwner = "bdawg1989";
-        private const string RepositoryName = "NotRaidBot";
+        private const string RepositoryName = "SVRaidBot";
 
         public static async Task<(bool UpdateAvailable, bool UpdateRequired, string NewVersion)> CheckForUpdatesAsync(bool forceShow = false)
         {
@@ -27,7 +27,7 @@ namespace SysBot.Pokemon.WinForms
                 return (false, false, string.Empty);
             }
 
-            bool updateAvailable = latestRelease.TagName != NotRaidBot.Version;
+            bool updateAvailable = latestRelease.TagName != SVRaidBot.Version;
             bool updateRequired = latestRelease.Prerelease == false && IsUpdateRequired(latestRelease.Body);
             string? newVersion = latestRelease.TagName;
 
@@ -65,7 +65,7 @@ namespace SysBot.Pokemon.WinForms
             using var client = new HttpClient();
             try
             {
-                client.DefaultRequestHeaders.Add("User-Agent", "NotRaidBot");
+                client.DefaultRequestHeaders.Add("User-Agent", "SVRaidBot");
 
                 string releasesUrl = $"https://api.github.com/repos/{RepositoryOwner}/{RepositoryName}/releases/latest";
                 Console.WriteLine($"Fetching from URL: {releasesUrl}");

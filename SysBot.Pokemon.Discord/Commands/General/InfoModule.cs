@@ -15,8 +15,8 @@ namespace SysBot.Pokemon.Discord
     public class InfoModule : ModuleBase<SocketCommandContext>
     {
         private const string detail = "I am an Open Source RaidBot powered by PKHeX.Core and other open-source software.";
-        public const string version = NotRaidBot.Version;
-        private const string support = NotRaidBot.Repo;
+        public const string version = SVRaidBot.Version;
+        private const string support = SVRaidBot.Repo;
         private const ulong DisallowedUserId = 195756980873199618;
 
         [Command("info")]
@@ -39,7 +39,7 @@ namespace SysBot.Pokemon.Discord
 
             builder.AddField("# __Bot Info__",
                 $"- **Version**: {version}\n" +
-                $"- [Download NotRaidBot]({support})\n- [Join Our Discord!](https://notpaldea.net)\n" +
+                $"- [Download SVRaidBot]({support})\n- [Join Our Discord!](https://notpaldea.net)\n" +
                 $"- {Format.Bold("Owner")}: {app.Owner} ({app.Owner.Id})\n" +
                 $"- {Format.Bold("Uptime")}: {GetUptime()}\n" +
                 $"- {Format.Bold("Core Version")}: {GetVersionInfo("PKHeX.Core")}\n" +
