@@ -1,6 +1,6 @@
 # Sc/Vi RaidBot
 
-## Hello, and welcome to my RaidBot Project.  For support, please visit our discord community at https://genpkm.com/forum
+## Hello, and welcome to my RaidBot Project.
 
 ![image](https://github.com/bdawg1989/NotRaidBot/assets/80122551/258bd7ab-0982-4641-9a3d-41bd192828dc)
 
