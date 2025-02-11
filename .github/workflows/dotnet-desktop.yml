@@ -10,7 +10,7 @@ jobs:
   version-check:
     runs-on: ubuntu-latest
     outputs:
-      current_version: ${{ steps.compare_versions.outputs.current_version }}
+      current_version: ${{ steps.read_version.outputs.current_version }}
       version_changed: ${{ steps.compare_versions.outputs.version_changed }}
     steps:
       - name: Checkout
@@ -21,7 +21,7 @@ jobs:
           CURRENT_VERSION=$(grep 'public const string Version' SysBot.Pokemon/Helpers/SVRaidBot.cs | sed 's/.*Version = "\(.*\)";/\1/')
           echo "Current version is $CURRENT_VERSION"
           echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_ENV
-          echo "CURRENT_VERSION=$CURRENT_VERSION" >> $GITHUB_OUTPUT
+          echo "current_version=$CURRENT_VERSION" >> $GITHUB_OUTPUT
       - name: Compare Versions
         id: compare_versions
         run: |
@@ -31,11 +31,9 @@ jobs:
           echo "Current version: $CURRENT_VERSION"
           if [ "$CURRENT_VERSION" == "$LAST_VERSION" ]; then
             echo "No version change detected."
-            echo "version_changed=false" >> $GITHUB_ENV
             echo "version_changed=false" >> $GITHUB_OUTPUT
           else
             echo "Version change detected."
-            echo "version_changed=true" >> $GITHUB_ENV
             echo "version_changed=true" >> $GITHUB_OUTPUT
           fi
 
