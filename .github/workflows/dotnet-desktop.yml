@@ -57,11 +57,11 @@ jobs:
       - name: Setup MSBuild.exe
         uses: microsoft/setup-msbuild@v2
       - name: Restore dependencies
-        run: dotnet restore ${{ env.Project_Name }} --runtime win-x86
+        run: dotnet restore ${{ env.Project_Name }} --runtime win-x64
       - name: Build
         run: dotnet build ${{ env.Project_Name }} --configuration Release --no-restore
       - name: Publish
-        run: dotnet publish ${{ env.Project_Name }} --configuration Release --output ./publish /p:PublishSingleFile=true /p:SelfContained=false /p:RuntimeIdentifier=win-x86
+        run: dotnet publish ${{ env.Project_Name }} --configuration Release --output ./publish /p:PublishSingleFile=true /p:SelfContained=false /p:RuntimeIdentifier=win-x64
       - name: Upload build artifacts
         uses: actions/upload-artifact@v4
         with:
